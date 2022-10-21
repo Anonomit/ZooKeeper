@@ -1,3 +1,6 @@
+ignore:
+  - LICENSE
+
 manual-changelog:
     filename: CHANGELOG.html
     markup-type: html
