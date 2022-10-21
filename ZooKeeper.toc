@@ -1,0 +1,19 @@
+## Interface: 30400
+## Version: 0.0.0
+## Author: Anonomit
+
+## X-Curse-Project-ID: 689881
+## X-Wago-ID: 5bGo4nN0
+
+## Title: ZooKeeper
+## Notes: Formats item tooltips.
+
+## SavedVariables: ZooKeeperDB
+
+## OptionalDeps: Ace3
+## X-Embeds: Ace3
+
+
+addon.xml
+
+

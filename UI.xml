@@ -1,0 +1,65 @@
+<Ui xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.blizzard.com/wow/ui/">
+  <Script file="UI.lua" />
+  <Button parentKey="Set" parent="PetPaperDollFrameCompanionFrame">
+    <Size x="32" y="32" />
+    <Anchors>
+      <Anchor point="RIGHT" relativeTo="CompanionSummonButton" relativePoint="LEFT" y="4" />
+    </Anchors>
+    <NormalTexture file="Interface\AddOns\ZooKeeper\Assets\Textures\FavoriteUnset" />
+    <PushedTexture file="Interface\AddOns\ZooKeeper\Assets\Textures\FavoriteUnset" alpha="0.5" />
+    <HighlightTexture file="Interface\AddOns\ZooKeeper\Assets\Textures\FavoriteSet" alphaMode="ADD" alpha="0.25" />
+    <Scripts>
+      <OnLoad>
+        self.Update = function()
+          local selected = PetPaperDollFrame_FindCompanionIndex()
+          if selected > 0 then
+            local spellID = select(3, GetCompanionInfo(PetPaperDollFrameCompanionFrame.mode, selected))
+            self:SetShown(not ZooKeeper:GetOption("fav", spellID))
+          end
+        end
+      </OnLoad>
+      <OnClick>
+        local selected = PetPaperDollFrame_FindCompanionIndex()
+        if selected > 0 then
+          local spellID = select(3, GetCompanionInfo(PetPaperDollFrameCompanionFrame.mode, selected))
+          ZooKeeper:SetOption(not ZooKeeper:GetOption("fav", spellID), "fav", spellID)
+          self:SetShown(not ZooKeeper:GetOption("fav", spellID))
+          self:GetParent().Unset:SetShown(ZooKeeper:GetOption("fav", spellID))
+          ZooKeeper:UpdateAllFavIcons()
+        end
+        PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
+      </OnClick>
+    </Scripts>
+  </Button>
+  <Button parentKey="Unset" parent="PetPaperDollFrameCompanionFrame">
+    <Size x="32" y="32" />
+    <Anchors>
+      <Anchor point="RIGHT" relativeTo="CompanionSummonButton" relativePoint="LEFT" y="4" />
+    </Anchors>
+    <NormalTexture file="Interface\AddOns\ZooKeeper\Assets\Textures\FavoriteSet" />
+    <PushedTexture file="Interface\AddOns\ZooKeeper\Assets\Textures\FavoriteSet" alpha="0.75" />
+    <HighlightTexture file="Interface\AddOns\ZooKeeper\Assets\Textures\FavoriteUnset" alphaMode="ADD" alpha="0.5" />
+    <Scripts>
+      <OnLoad>
+        self.Update = function()
+          local selected = PetPaperDollFrame_FindCompanionIndex()
+          if selected > 0 then
+            local spellID = select(3, GetCompanionInfo(PetPaperDollFrameCompanionFrame.mode, selected))
+            self:SetShown(ZooKeeper:GetOption("fav", spellID))
+          end
+        end
+      </OnLoad>
+      <OnClick>
+        local selected = PetPaperDollFrame_FindCompanionIndex()
+        if selected > 0 then
+          local spellID = select(3, GetCompanionInfo(PetPaperDollFrameCompanionFrame.mode, selected))
+          ZooKeeper:SetOption(not ZooKeeper:GetOption("fav", spellID), "fav", spellID)
+          self:SetShown(ZooKeeper:GetOption("fav", spellID))
+          self:GetParent().Set:SetShown(not ZooKeeper:GetOption("fav", spellID))
+          ZooKeeper:UpdateAllFavIcons()
+        end
+        PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
+      </OnClick>
+    </Scripts>
+  </Button>
+</Ui>
