@@ -95,32 +95,6 @@ function Addon:OnOptionSet(...)
 end
 
 
-function Addon:IsEnabled()
-  local invertMode = self:GetOption"invertMode"
-  if invertMode == "none" then
-    return self:GetOption"enabled"
-  elseif invertMode == "any" then
-    if     IsShiftKeyDown()   and self:GetOption("modKeys", "shift")
-        or IsControlKeyDown() and self:GetOption("modKeys", "ctrl")
-        or IsAltKeyDown()     and self:GetOption("modKeys", "alt")
-    then
-      return not self:GetOption"enabled"
-    else
-      return self:GetOption"enabled"
-    end
-  elseif invertMode == "all" then
-    if      (IsShiftKeyDown()   or not self:GetOption("modKeys", "shift"))
-        and (IsControlKeyDown() or not self:GetOption("modKeys", "ctrl"))
-        and (IsAltKeyDown()     or not self:GetOption("modKeys", "alt"))
-    then
-      return not self:GetOption"enabled"
-    else
-      return self:GetOption"enabled"
-    end
-  end
-end
-
-
 
 
 local tinsert = table.insert

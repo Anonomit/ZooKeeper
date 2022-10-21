@@ -9,8 +9,6 @@ local ADDON_NAME, Data = ...
 local Addon = LibStub("AceAddon-3.0"):NewAddon(ADDON_NAME, "AceConsole-3.0", "AceEvent-3.0")
 Addon.onOptionSetHandlers = {}
 
--- Curseforge automatic packaging will comment this out
--- https://support.curseforge.com/en/support/solutions/articles/9000197281-automatic-packaging
 --@debug@
   local debugMode = true
   

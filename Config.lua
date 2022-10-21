@@ -31,12 +31,6 @@ function Addon:MakeDefaultOptions()
     db = {
       profile = {
         
-        enabled    = true,
-        invertMode = "none",
-        modKeys = {
-          ["*"] = true,
-        },
-        
         fav = {
           ["*"] = false,
         },
