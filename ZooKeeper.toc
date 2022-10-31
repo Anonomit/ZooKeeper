@@ -10,8 +10,8 @@
 
 ## SavedVariables: ZooKeeperDB
 
-## OptionalDeps: Ace3
-## X-Embeds: Ace3
+## OptionalDeps: Ace3, SemVer
+## X-Embeds: Ace3, SemVer
 
 
 addon.xml
