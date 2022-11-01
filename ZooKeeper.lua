@@ -364,9 +364,11 @@ function Addon:CallCritter(input)
       currentPet = spellID
     end
     
-    tinsert(critters, spellID)
-    if Addon:GetOption("fav", spellID) then
-      tinsert(critters.fav, spellID)
+    if self:CanAfford(spellID) then
+      tinsert(critters, spellID)
+      if Addon:GetOption("fav", spellID) then
+        tinsert(critters.fav, spellID)
+      end
     end
   end
   

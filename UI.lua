@@ -41,9 +41,9 @@ function Addon:MakeUI()
     button:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT")
   end
   
-  Addon:UpdateAllFavIcons()
+  self:UpdateAllFavIcons()
   
-  hooksecurefunc("PetPaperDollFrame_UpdateCompanions", function() Addon:UpdateAllFavIcons() end)
+  hooksecurefunc("PetPaperDollFrame_UpdateCompanions", function() self:UpdateAllFavIcons() end)
   
   
   --[[

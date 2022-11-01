@@ -125,8 +125,7 @@ do
     end
   end
   
-  Addon.mounts = 
-  {
+  Addon.mounts = {
     [458] = {284, 2, 0, 60, 0, 0},
     [459] = {4268, 2, 64, 60, 0, 0},
     [468] = {305, 2, 64, 60, 0, 0},
@@ -591,4 +590,21 @@ do
     return true
   end
 end
+
+
+do
+  Addon.companionReagents = {
+    [26045] = 17202, -- Tiny Snowman
+    [26529] = 17202, -- Winter Reindeer
+    [26533] = 17202, -- Father Winter's Helper
+    [26541] = 17202, -- Winter's Little Helper
+  }
+  
+  function Addon:CanAfford(spellID)
+    local reagent = self.companionReagents[spellID]
+    return not reagent or GetItemCount(reagent) > 0
+  end
+end
+
+
 
