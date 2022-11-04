@@ -12,12 +12,17 @@ do
       return IsSpellKnown(54197) -- Cold Weather Flying
     end,
   }
+  
+  local sketchyPlaces = setmetatable(Addon:MakeLookupTable({
+    125, -- Dalaran
+    126, -- Dalaran Underbelly
+  }, true), {__index = function() return false end})
+  
   local sketchyFlyableChecks = {
     [571] = function() -- Northrend
       if IsSpellKnown(54197) then -- Cold Weather Flying
         local zone, subZone = GetZoneText(), GetSubZoneText()
-        return C_Map.GetBestMapForUnit"player" == 125 -- Dalaran
-        -- return zone == "Dalaran" and subZone ~= "Krasus' Landing"
+        return sketchyPlaces[C_Map.GetBestMapForUnit"player"]
       end
       return false
     end,
