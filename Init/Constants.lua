@@ -1,46 +1,163 @@
 
 local ADDON_NAME, Data = ...
 
+
 local Addon = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 
 
 
+local strLower  = string.lower
+local strFind   = string.find
+local strMatch  = string.match
+local strGsub   = string.gsub
+
+local tinsert   = table.insert
+local tblRemove = table.remove
+local tblConcat = table.concat
+
+local tostring = tostring
+
+
+
+
+
+
+
+--  ███████╗██╗  ██╗██████╗  █████╗ ███╗   ██╗███████╗██╗ ██████╗ ███╗   ██╗███████╗
+--  ██╔════╝╚██╗██╔╝██╔══██╗██╔══██╗████╗  ██║██╔════╝██║██╔═══██╗████╗  ██║██╔════╝
+--  █████╗   ╚███╔╝ ██████╔╝███████║██╔██╗ ██║███████╗██║██║   ██║██╔██╗ ██║███████╗
+--  ██╔══╝   ██╔██╗ ██╔═══╝ ██╔══██║██║╚██╗██║╚════██║██║██║   ██║██║╚██╗██║╚════██║
+--  ███████╗██╔╝ ██╗██║     ██║  ██║██║ ╚████║███████║██║╚██████╔╝██║ ╚████║███████║
+--  ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝
+
 do
-  local continentFlyableChecks = setmetatable({
-    [571] = function() -- Northrend
-      return IsSpellKnown(54197) -- Cold Weather Flying
-    end,
-  }, {__index = function() return function() return true end end})
+  Addon.expansions = {
+    retail  = 9,
+    wrath   = 3,
+    wotlk   = 3,
+    tbc     = 2,
+    bcc     = 2,
+    classic = 1,
+  }
+  Addon.expansionLevel = tonumber(GetBuildInfo():match"^(%d+)%.")
+  if Addon.expansionLevel >= Addon.expansions.retail then
+    Addon.expansionName = "retail"
+  elseif Addon.expansionLevel >= Addon.expansions.wrath then
+    Addon.expansionName = "wrath"
+  elseif Addon.expansionLevel == Addon.expansions.tbc then
+    Addon.expansionName = "tbc"
+  elseif Addon.expansionLevel == Addon.expansions.classic then
+    Addon.expansionName = "classic"
+  end
+  Addon.isRetail  = Addon.expansionName == "retail"
+  Addon.isWrath   = Addon.expansionName == "wrath"
+  Addon.isTBC     = Addon.expansionName == "tbc"
+  Addon.isClassic = Addon.expansionName == "classic"
+end
+
+
+
+--  ███╗   ██╗ █████╗ ███╗   ███╗███████╗███████╗
+--  ████╗  ██║██╔══██╗████╗ ████║██╔════╝██╔════╝
+--  ██╔██╗ ██║███████║██╔████╔██║█████╗  ███████╗
+--  ██║╚██╗██║██╔══██║██║╚██╔╝██║██╔══╝  ╚════██║
+--  ██║ ╚████║██║  ██║██║ ╚═╝ ██║███████╗███████║
+--  ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝╚══════╝
+
+do
+  Addon.MY_NAME = UnitName"player"
+end
+
+
+
+
+--  ██████╗  █████╗  ██████╗███████╗███████╗
+--  ██╔══██╗██╔══██╗██╔════╝██╔════╝██╔════╝
+--  ██████╔╝███████║██║     █████╗  ███████╗
+--  ██╔══██╗██╔══██║██║     ██╔══╝  ╚════██║
+--  ██║  ██║██║  ██║╚██████╗███████╗███████║
+--  ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝╚══════╝
+
+do
+  Addon.MY_RACE_NAME = UnitRace"player"
+end
+
+
+
+--   ██████╗██╗      █████╗ ███████╗███████╗███████╗███████╗
+--  ██╔════╝██║     ██╔══██╗██╔════╝██╔════╝██╔════╝██╔════╝
+--  ██║     ██║     ███████║███████╗███████╗█████╗  ███████╗
+--  ██║     ██║     ██╔══██║╚════██║╚════██║██╔══╝  ╚════██║
+--  ╚██████╗███████╗██║  ██║███████║███████║███████╗███████║
+--   ╚═════╝╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚══════╝
+
+do
+  local _
+  Addon.MY_CLASS_NAME, _, Addon.MY_CLASS = UnitClass"player"
+end
+
+
+
+--  ██╗     ███████╗██╗   ██╗███████╗██╗     ███████╗
+--  ██║     ██╔════╝██║   ██║██╔════╝██║     ██╔════╝
+--  ██║     █████╗  ██║   ██║█████╗  ██║     ███████╗
+--  ██║     ██╔══╝  ╚██╗ ██╔╝██╔══╝  ██║     ╚════██║
+--  ███████╗███████╗ ╚████╔╝ ███████╗███████╗███████║
+--  ╚══════╝╚══════╝  ╚═══╝  ╚══════╝╚══════╝╚══════╝
+
+do
+  Addon.MAX_LEVEL = MAX_PLAYER_LEVEL_TABLE[GetExpansionLevel()]
   
-  local sketchyPlaces = setmetatable(Addon:MakeLookupTable({
+  Addon.MY_LEVEL = UnitLevel"player"
+  
+  Addon:RegisterEvent("PLAYER_LEVEL_UP", function(_, level) Addon.MY_LEVEL = UnitLevel"player" end)
+end
+
+
+
+--  ██╗      ██████╗  ██████╗ █████╗ ████████╗██╗ ██████╗ ███╗   ██╗███████╗
+--  ██║     ██╔═══██╗██╔════╝██╔══██╗╚══██╔══╝██║██╔═══██╗████╗  ██║██╔════╝
+--  ██║     ██║   ██║██║     ███████║   ██║   ██║██║   ██║██╔██╗ ██║███████╗
+--  ██║     ██║   ██║██║     ██╔══██║   ██║   ██║██║   ██║██║╚██╗██║╚════██║
+--  ███████╗╚██████╔╝╚██████╗██║  ██║   ██║   ██║╚██████╔╝██║ ╚████║███████║
+--  ╚══════╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝
+
+do
+  local knowsColdWeatherFlying = nil
+  local function KnowsColdWeatherFlying()
+    if not knowsColdWeatherFlying then
+      knowsColdWeatherFlying = IsSpellKnown(54197)
+    end
+    return knowsColdWeatherFlying
+  end
+  
+  -- locations in northrend in which a flying mount may not work, despite passing all checks
+  local northrendFailureLocations = setmetatable(Addon:MakeLookupTable({
     125, -- Dalaran
     126, -- Dalaran Underbelly
   }, true), {__index = function() return false end})
   
-  local sketchyFlyableChecks = setmetatable({
+  -- continents in which a flying mount may not work, even though IsFlyableArea() == true
+  Addon.flyingFailureLocations = setmetatable({
     [571] = function() -- Northrend
-      if IsSpellKnown(54197) then -- Cold Weather Flying
-        local zone, subZone = GetZoneText(), GetSubZoneText()
-        return sketchyPlaces[C_Map.GetBestMapForUnit"player"]
-      end
-      return false
+      return KnowsColdWeatherFlying() and northrendFailureLocations[C_Map.GetBestMapForUnit"player"]
     end,
   }, {__index = function() return function() return false end end})
   
-  function Addon:CanFly()
-    if not IsFlyableArea() then return false end
-    local mapID = select(8, GetInstanceInfo())
-    return continentFlyableChecks[mapID]()
-  end
-  
-  -- check if we're in an area that is "flyable" but sometimes actually prohibits flying mounts
-  function Addon:IsFlyingSketchy()
-    local mapID = select(8, GetInstanceInfo())
-    return sketchyFlyableChecks[mapID]()
-  end
+  -- locations in which flying requires extra checks such as prequisite skills
+  Addon.flightPermissionLocations = setmetatable({
+    [571] = KnowsColdWeatherFlying, -- Northrend,
+  }, {__index = function() return function() return true end end})
 end
 
 
+
+--  ███╗   ███╗ ██████╗ ██╗   ██╗███╗   ██╗████████╗███████╗
+--  ████╗ ████║██╔═══██╗██║   ██║████╗  ██║╚══██╔══╝██╔════╝
+--  ██╔████╔██║██║   ██║██║   ██║██╔██╗ ██║   ██║   ███████╗
+--  ██║╚██╔╝██║██║   ██║██║   ██║██║╚██╗██║   ██║   ╚════██║
+--  ██║ ╚═╝ ██║╚██████╔╝╚██████╔╝██║ ╚████║   ██║   ███████║
+--  ╚═╝     ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝
 
 do
   --[[
@@ -69,59 +186,6 @@ do
   0x200 Add to Action Bar on Learn
   0x400 NOT for use as a taxi (non-standard mount anim)
   --]]
-  
-  function Addon:GetMountInfo(spellID)
-    local info = Addon.mounts[spellID]
-    if info then
-      return unpack(info, 1, 8)
-    end
-  end
-  
-  function Addon:GetMountSpeed(spellID, speedType)
-    local info = Addon.mounts[spellID]
-    if info then
-      if speedType == "ground" then
-        return info[4]
-      elseif speedType == "fly" then
-        return info[5]
-      elseif speedType == "swim" then
-        return info[6]
-      end
-    end
-  end
-  
-  function Addon:CanMountBeSpeed(spellID, speedType, exactSpeed)
-    local speed = self:GetMountSpeed(spellID, speedType)
-    if speed then
-      if type(speed) == "table" then
-        for i = 1, #speed do
-          if speed[i] == exactSpeed or speed[i] == exactSpeed - 100 then
-            return true
-          end
-        end
-        return false
-      else
-        return speed == exactSpeed or speed == exactSpeed - 100
-      end
-    end
-    return false
-  end
-  
-  function Addon:GetMountFastestSpeed(spellID, speedType)
-    local speed = self:GetMountSpeed(spellID, speedType)
-    if speed then
-      local fastest = speed
-      if type(speed) == "table" then
-        fastest = speed[1]
-        for i = 2, #speed do
-          if speed[i] > fastest then
-            fastest = speed
-          end
-        end
-      end
-      return fastest
-    end
-  end
   
   Addon.mounts = {
     [458] = {284, 2, 0, 60, 0, 0},
@@ -550,46 +614,19 @@ do
   Set(8, function() return UnitClassBase"player" == "DEATHKNIGHT" end, 48778, 54729)
   Set(8, function() return UnitClassBase"player" == "PALADIN" end, 73629, 73630, 69820, 69826, 34767, 34769, 13819, 23214, 66906)
   Set(8, function() return UnitClassBase"player" == "WARLOCK" end, 5784, 23161)
+  
+  
+  Addon.aqMounts = setmetatable(Addon:MakeLookupTable({25953, 26054, 26055, 26056}, true), {__index = function() return false end})
 end
 
-do
-  local aqZones = setmetatable({
-    ["Ahn'Qiraj"] = true,
-    ["Ahn Qiraj"] = true,
-    ["Ан'Кираж"]  = true,
-  }, {__index = function() return false end})
-  local aqMounts = setmetatable({
-    [25953] = true,
-    [26054] = true,
-    [26055] = true,
-    [26056] = true,
-  }, {__index = function() return false end})
-  
-  function Addon:IsInAQ()
-    return aqZones[GetMinimapZoneText()]
-  end
-  
-  function Addon:IsMountUsable(spellID, flyable, swimming, inAQ)
-    local _, typeFlags, _, _, _, _, faction, UsableFunc = Addon:GetMountInfo(spellID)
-    
-    if bit.band(typeFlags or 0, 0x1) ~= 0 and not flyable then
-      return false
-    end
-    
-    if bit.band(typeFlags or 0, 0x2) == 0 and swimming then
-      return false
-    end
-    
-    if inAQ then
-      return aqMounts[spellID]
-    elseif aqMounts[spellID] then
-      return false
-    end
-    
-    return true
-  end
-end
 
+
+--  ██████╗ ███████╗ █████╗  ██████╗ ███████╗███╗   ██╗████████╗███████╗
+--  ██╔══██╗██╔════╝██╔══██╗██╔════╝ ██╔════╝████╗  ██║╚══██╔══╝██╔════╝
+--  ██████╔╝█████╗  ███████║██║  ███╗█████╗  ██╔██╗ ██║   ██║   ███████╗
+--  ██╔══██╗██╔══╝  ██╔══██║██║   ██║██╔══╝  ██║╚██╗██║   ██║   ╚════██║
+--  ██║  ██║███████╗██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║   ███████║
+--  ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚══════╝
 
 do
   Addon.companionReagents = {
@@ -598,12 +635,9 @@ do
     [26533] = 17202, -- Father Winter's Helper
     [26541] = 17202, -- Winter's Little Helper
   }
-  
-  function Addon:CanAfford(spellID)
-    local reagent = self.companionReagents[spellID]
-    return not reagent or GetItemCount(reagent) > 0
-  end
 end
+
+
 
 
 

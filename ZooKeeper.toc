@@ -1,4 +1,4 @@
-## Interface: 30400
+## Interface: 30401
 ## Version: 1.0.2
 ## Author: Anonomit
 
@@ -14,6 +14,6 @@
 ## X-Embeds: Ace3, SemVer
 
 
-addon.xml
+_addon.xml
 
 

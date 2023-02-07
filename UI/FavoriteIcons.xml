@@ -1,0 +1,30 @@
+<Ui xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.blizzard.com/wow/ui/">
+  
+  <Script file="FavoriteIcons.lua" />
+  
+  <Button name="ZooKeeperFavIcon" enableMouse="false" virtual="true">
+    <Size x="16" y="16" />
+    <Anchors>
+      <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT" />
+    </Anchors>
+    <NormalTexture file="Interface\\AddOns\\ZooKeeper\\Assets\\Textures\\FavoriteSet" />
+   <Scripts>
+    <OnLoad>
+      ZooKeeper.UI.FavoriteIcons.OnLoad(self)
+    </OnLoad>
+   </Scripts>
+  </Button>
+  
+  <Button name="$parentZooKeeper" parent="CompanionButton1"  inherits="ZooKeeperFavIcon" />
+  <Button name="$parentZooKeeper" parent="CompanionButton2"  inherits="ZooKeeperFavIcon" />
+  <Button name="$parentZooKeeper" parent="CompanionButton3"  inherits="ZooKeeperFavIcon" />
+  <Button name="$parentZooKeeper" parent="CompanionButton4"  inherits="ZooKeeperFavIcon" />
+  <Button name="$parentZooKeeper" parent="CompanionButton5"  inherits="ZooKeeperFavIcon" />
+  <Button name="$parentZooKeeper" parent="CompanionButton6"  inherits="ZooKeeperFavIcon" />
+  <Button name="$parentZooKeeper" parent="CompanionButton7"  inherits="ZooKeeperFavIcon" />
+  <Button name="$parentZooKeeper" parent="CompanionButton8"  inherits="ZooKeeperFavIcon" />
+  <Button name="$parentZooKeeper" parent="CompanionButton9"  inherits="ZooKeeperFavIcon" />
+  <Button name="$parentZooKeeper" parent="CompanionButton10" inherits="ZooKeeperFavIcon" />
+  <Button name="$parentZooKeeper" parent="CompanionButton11" inherits="ZooKeeperFavIcon" />
+  <Button name="$parentZooKeeper" parent="CompanionButton11" inherits="ZooKeeperFavIcon" />
+</Ui>

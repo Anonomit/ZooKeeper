@@ -57,7 +57,7 @@ Addon.AceConfigDialog   = LibStub"AceConfigDialog-3.0"
 Addon.AceDB             = LibStub"AceDB-3.0"
 Addon.AceDBOptions      = LibStub"AceDBOptions-3.0"
 
-Addon.SemVer     = LibStub"SemVer"
+Addon.SemVer            = LibStub"SemVer"
 
 
 
@@ -89,71 +89,19 @@ end
 
 
 
-local strLower  = string.lower
-local strFind   = string.find
-local strMatch  = string.match
 local strSub    = string.sub
-local strGsub   = string.gsub
-local strGmatch = string.gmatch
-local strByte   = string.byte
 
 local mathMin   = math.min
 local mathMax   = math.max
 local mathFloor = math.floor
 
 local tinsert   = table.insert
-local tblRemove = table.remove
-local tblConcat = table.concat
 
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-local L = setmetatable({}, {
-  __index = function(self, key)
-    rawset(self, key, key)
-    if Addon:IsDebugEnabled() then
-      geterrorhandler()(ADDON_NAME..": Missing automatic translation for '"..tostring(key).."'")
-    end
-    return key
-  end
-})
-Addon.L = L
-
-
-L["Enable"]  = ENABLE
-L["Disable"] = DISABLE
-L["Enabled"] = VIDEO_OPTIONS_ENABLED
--- L["Disabled"] = ADDON_DISABLED
-L["Modifiers:"] = MODIFIERS_COLON
-
-L["never"] = strLower(CALENDAR_REPEAT_NEVER)
-L["any"]   = strLower(SPELL_TARGET_TYPE1_DESC)
-L["all"]   = strLower(SPELL_TARGET_TYPE12_DESC)
-
-L["SHIFT key"] = SHIFT_KEY
-L["CTRL key"]  = CTRL_KEY
-L["ALT key"]   = ALT_KEY
-
-
-L["Debug"]                        = BINDING_HEADER_DEBUG
-L["Reload UI"]                    = RELOADUI
-L["Hide messages like this one."] = COMBAT_LOG_MENU_SPELL_HIDE
-
-
-L["Mounts"]     = MOUNTS
-L["Companions"] = COMPANIONS
 
 
 

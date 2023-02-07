@@ -332,11 +332,11 @@ do
       validMounts = self:GetValidMounts(#mounts.fav[mountType] > 0 and mounts.fav[mountType] or mounts[mountType], mountType, speed)
     end
     if validMounts and #validMounts > 0 then
-      castingMount = self:MountValidMount(validMounts, currentMount, companionMap, self:IsFlyingSketchy())
+      castingMount = self:MountValidMount(validMounts, currentMount, companionMap, self:CanFlyingFail())
     end
     
     -- if we're in a "sketchy" area, the only solution (besides super detailed coordinate checking) seems to be attempting a ground mount in case the flying one failed
-    if mountType == "fly" and self:IsFlyingSketchy() and castingMount then
+    if mountType == "fly" and self:CanFlyingFail() and castingMount then
       mountType = "ground"
       local validMounts = self:GetValidMounts(#mounts.fav[mountType] > 0 and mounts.fav[mountType] or mounts[mountType], mountType, speed)
       if validMounts and #validMounts > 0 then
@@ -489,8 +489,6 @@ function Addon:CreateOptionsCategory(categoryName, options)
 end
 
 function Addon:CreateOptions()
-  self:InitOptionTableHelpers()
-  
   self:MakeAddonOptions(self.chatCommands[1])
   
   -- Profile Options
@@ -555,7 +553,7 @@ function Addon:OnEnable()
   end
   self:CreateOptions()
   
-  self:MakeUI()
+  self.UI:Init()
   
   self.addonLoadHooks = {}
   self:RegisterEvent("ADDON_LOADED", function(e, addon)
