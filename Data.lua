@@ -2,23 +2,22 @@
 local ADDON_NAME, Data = ...
 
 local Addon = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
-ZooKeeper = Addon
 
 
 
 do
-  local continentFlyableChecks = {
+  local continentFlyableChecks = setmetatable({
     [571] = function() -- Northrend
       return IsSpellKnown(54197) -- Cold Weather Flying
     end,
-  }
+  }, {__index = function() return function() return true end end})
   
   local sketchyPlaces = setmetatable(Addon:MakeLookupTable({
     125, -- Dalaran
     126, -- Dalaran Underbelly
   }, true), {__index = function() return false end})
   
-  local sketchyFlyableChecks = {
+  local sketchyFlyableChecks = setmetatable({
     [571] = function() -- Northrend
       if IsSpellKnown(54197) then -- Cold Weather Flying
         local zone, subZone = GetZoneText(), GetSubZoneText()
@@ -26,24 +25,18 @@ do
       end
       return false
     end,
-  }
+  }, {__index = function() return function() return false end end})
   
   function Addon:CanFly()
     if not IsFlyableArea() then return false end
     local mapID = select(8, GetInstanceInfo())
-    if continentFlyableChecks[mapID] then
-      return continentFlyableChecks[mapID]()
-    end
-    return IsFlyableArea()
+    return continentFlyableChecks[mapID]()
   end
   
   -- check if we're in an area that is "flyable" but sometimes actually prohibits flying mounts
   function Addon:IsFlyingSketchy()
     local mapID = select(8, GetInstanceInfo())
-    if sketchyFlyableChecks[mapID] then
-      return sketchyFlyableChecks[mapID]()
-    end
-    return false
+    return sketchyFlyableChecks[mapID]()
   end
 end
 
@@ -528,9 +521,10 @@ do
     [76153] = {40625, 1, nil, 100, 310, 0},
     [76154] = {40725, 3, nil, 100, 310, 0},
     
-    -- TODO: deluxe edition mounts creature IDs: GetCompanionInfo(PetPaperDollFrameCompanionFrame.mode, selected)
-    [348459] = {1, 2, 0, 0, {150, 280}, 0},
-    [372677] = {1, 2, 0, {60, 100}, {150, 280}, 0},
+    -- TODO: entirely new mounts are missing creature IDs: GetCompanionInfo(PetPaperDollFrameCompanionFrame.mode, selected)
+    [348459] = {1, 2, 0, 0, {150, 280}, 0}, -- Reawakened Phase-Hunter
+    [372677] = {1, 4, 0, {60, 100}, {150, 280}, 0}, -- Kalu'ak Whalebone Glider
+    [394209] = {1, 4, 0, {60, 100}, {150, 280, 310}}, -- Festering Emerald Drake
   }
   
   local function Set(index, value, ...)
