@@ -7,7 +7,7 @@
     <Anchors>
       <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT" />
     </Anchors>
-    <NormalTexture file="Interface\\AddOns\\ZooKeeper\\Assets\\Textures\\FavoriteSet" />
+    <NormalTexture file="Interface\AddOns\ZooKeeper\Assets\Textures\FavoriteSet" />
    <Scripts>
     <OnLoad>
       ZooKeeper.UI.FavoriteIcons.OnLoad(self)
@@ -15,16 +15,16 @@
    </Scripts>
   </Button>
   
-  <Button name="$parentZooKeeper" parent="CompanionButton1"  inherits="ZooKeeperFavIcon" />
-  <Button name="$parentZooKeeper" parent="CompanionButton2"  inherits="ZooKeeperFavIcon" />
-  <Button name="$parentZooKeeper" parent="CompanionButton3"  inherits="ZooKeeperFavIcon" />
-  <Button name="$parentZooKeeper" parent="CompanionButton4"  inherits="ZooKeeperFavIcon" />
-  <Button name="$parentZooKeeper" parent="CompanionButton5"  inherits="ZooKeeperFavIcon" />
-  <Button name="$parentZooKeeper" parent="CompanionButton6"  inherits="ZooKeeperFavIcon" />
-  <Button name="$parentZooKeeper" parent="CompanionButton7"  inherits="ZooKeeperFavIcon" />
-  <Button name="$parentZooKeeper" parent="CompanionButton8"  inherits="ZooKeeperFavIcon" />
-  <Button name="$parentZooKeeper" parent="CompanionButton9"  inherits="ZooKeeperFavIcon" />
-  <Button name="$parentZooKeeper" parent="CompanionButton10" inherits="ZooKeeperFavIcon" />
-  <Button name="$parentZooKeeper" parent="CompanionButton11" inherits="ZooKeeperFavIcon" />
-  <Button name="$parentZooKeeper" parent="CompanionButton11" inherits="ZooKeeperFavIcon" />
+  <Button parentKey="FavIcon" parent="CompanionButton1"  inherits="ZooKeeperFavIcon" />
+  <Button parentKey="FavIcon" parent="CompanionButton2"  inherits="ZooKeeperFavIcon" />
+  <Button parentKey="FavIcon" parent="CompanionButton3"  inherits="ZooKeeperFavIcon" />
+  <Button parentKey="FavIcon" parent="CompanionButton4"  inherits="ZooKeeperFavIcon" />
+  <Button parentKey="FavIcon" parent="CompanionButton5"  inherits="ZooKeeperFavIcon" />
+  <Button parentKey="FavIcon" parent="CompanionButton6"  inherits="ZooKeeperFavIcon" />
+  <Button parentKey="FavIcon" parent="CompanionButton7"  inherits="ZooKeeperFavIcon" />
+  <Button parentKey="FavIcon" parent="CompanionButton8"  inherits="ZooKeeperFavIcon" />
+  <Button parentKey="FavIcon" parent="CompanionButton9"  inherits="ZooKeeperFavIcon" />
+  <Button parentKey="FavIcon" parent="CompanionButton10" inherits="ZooKeeperFavIcon" />
+  <Button parentKey="FavIcon" parent="CompanionButton11" inherits="ZooKeeperFavIcon" />
+  <Button parentKey="FavIcon" parent="CompanionButton12" inherits="ZooKeeperFavIcon" />
 </Ui>

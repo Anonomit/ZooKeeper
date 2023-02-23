@@ -9,8 +9,10 @@ local Addon = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 Addon.UI.FavoriteButtons = {}
 local This = Addon.UI.FavoriteButtons
 
+
+
 function This:Init()
-  hooksecurefunc("PetPaperDollFrame_UpdateCompanionPreview", function() Addon.UI.FavoriteButtons:UpdateAll() end)
+  hooksecurefunc("PetPaperDollFrame_UpdateCompanionPreview", function() self:UpdateAll() end)
 end
 
 
@@ -20,7 +22,7 @@ function This.OnLoad(self)
     local selected = PetPaperDollFrame_FindCompanionIndex()
     if selected > 0 then
       local spellID = select(3, GetCompanionInfo(PetPaperDollFrameCompanionFrame.mode, selected))
-      self:SetShown(self.fav ~= Addon:GetOption("fav", spellID))
+      self:SetShown(self.fav ~= (Addon:GetOption("fav", spellID) or false))
     end
   end
 end
