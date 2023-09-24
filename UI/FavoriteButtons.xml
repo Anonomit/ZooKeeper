@@ -7,14 +7,14 @@
     <Anchors>
       <Anchor point="RIGHT" relativeTo="CompanionSummonButton" relativePoint="LEFT" y="4" />
     </Anchors>
-     <Scripts>
+    <Scripts>
       <OnLoad>
         ZooKeeper.UI.FavoriteButtons.OnLoad(self)
       </OnLoad>
       <OnClick>
         ZooKeeper.UI.FavoriteButtons.OnClick(self)
       </OnClick>
-     </Scripts>
+    </Scripts>
   </Button>
   
   <Button parentKey="Set" parent="PetPaperDollFrameCompanionFrame" inherits="ZooKeeperFavButton" >

@@ -8,11 +8,11 @@
       <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT" />
     </Anchors>
     <NormalTexture file="Interface\AddOns\ZooKeeper\Assets\Textures\FavoriteSet" />
-   <Scripts>
-    <OnLoad>
-      ZooKeeper.UI.FavoriteIcons.OnLoad(self)
-    </OnLoad>
-   </Scripts>
+    <Scripts>
+      <OnLoad>
+        ZooKeeper.UI.FavoriteIcons.OnLoad(self)
+      </OnLoad>
+    </Scripts>
   </Button>
   
   <Button parentKey="FavIcon" parent="CompanionButton1"  inherits="ZooKeeperFavIcon" />
