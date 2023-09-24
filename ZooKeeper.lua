@@ -180,7 +180,7 @@ do
       self:Debug("Final Mount Pool:")
       for _, spellID in ipairs(validMounts) do
         local _, name = GetCompanionInfo("MOUNT", companionMap[spellID])
-        self:Debug("  " .. name)
+        self:Debug("  " .. spellID)
       end
     end
     Dismount()
@@ -193,6 +193,7 @@ do
     end
     if not alreadyMounted then
       local mountID = companionMap[validMounts[random(#validMounts)]]
+      mountID = select(12, C_MountJournal.GetDisplayedMountInfo(mountID))
       
       local soundEnabled
       if silent then
@@ -201,7 +202,7 @@ do
           SetCVar("Sound_EnableAllSound", 0)
         end
       end
-      CallCompanion("MOUNT", mountID)
+      C_MountJournal.SummonByID(mountID)
       if silent then
         UIErrorsFrame:Clear()
         if soundEnabled ~= 0 then
@@ -252,7 +253,7 @@ do
         tinsert(mounts.fav[mountType], spellID)
       end
     end
-    Addon:DebugfIf({"debugOutput", "mountTypes"}, "%s can %s", select(2, GetCompanionInfo("MOUNT", i)), mountType)
+    Addon:DebugfIf({"debugOutput", "mountTypes"}, "%s can %s", spellID, mountType)
   end
 
   function Addon:Mount(input)
@@ -276,14 +277,15 @@ do
     local currentMount
     
     local companionMap = {}
-    for i = 1, GetNumCompanions"MOUNT" do
-      local spellID, _, isSummoned = select(3, GetCompanionInfo("MOUNT", i))
+    for i = 1, C_MountJournal.GetNumDisplayedMounts() do
+      local creatureName, spellID, icon, active, isUsable, sourceType, isFavorite, isFactionSpecific, faction, hideOnChar, isCollected = C_MountJournal.GetDisplayedMountInfo(i)
       companionMap[spellID] = i
-      self:DebugfIf({"debugOutput", "usable"}, "%s is %susable", select(2, GetCompanionInfo("MOUNT", i)), self:IsMountUsable(spellID, flyable, swimming, inAQ) and "" or "un")
+
+      self:DebugfIf({"debugOutput", "usable"}, "%s is %susable by Blizzard, is %susable by ZooKeeper", creatureName, isUsable and "" or "un", self:IsMountUsable(spellID, flyable, swimming, inAQ) and "" or "un")
       
-      if self:IsMountUsable(spellID, flyable, swimming, inAQ) then
+      if isUsable then
         local _, typeFlags, mountFlags, flightSpeeds, groundSpeeds, swimSpeeds = self:GetMountInfo(spellID)
-        if isSummoned then
+        if active then
           currentMount = spellID
         end
         
@@ -315,7 +317,7 @@ do
           local lis = cats[cat]
           self:Debugf("  %s%s:", i == 1 and "fav " or "", cat)
           for _, spellID in ipairs(lis) do
-            local _, name = GetCompanionInfo("MOUNT", companionMap[spellID])
+            local name = C_MountJournal.GetDisplayedMountInfo(companionMap[spellID])
             self:Debug("    " .. name)
           end
         end
