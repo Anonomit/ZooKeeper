@@ -3,10 +3,7 @@
   <Script file="FavoriteButtons.lua" />
   
   <Button name="ZooKeeperFavButton" virtual="true">
-    <Size x="32" y="32" />
-    <Anchors>
-      <Anchor point="RIGHT" relativeTo="CompanionSummonButton" relativePoint="LEFT" y="4" />
-    </Anchors>
+    <Size x="24" y="24" />
     <Scripts>
       <OnLoad>
         ZooKeeper.UI.FavoriteButtons.OnLoad(self)
@@ -17,7 +14,7 @@
     </Scripts>
   </Button>
   
-  <Button parentKey="Set" parent="PetPaperDollFrameCompanionFrame" inherits="ZooKeeperFavButton" >
+  <Button name="ZooKeeperFavButtonSet" inherits="ZooKeeperFavButton" virtual="true" >
     <KeyValues>
       <KeyValue key="fav" type="boolean" value="true" />
     </KeyValues>
@@ -26,7 +23,7 @@
     <HighlightTexture file="Interface\AddOns\ZooKeeper\Assets\Textures\FavoriteSet" alphaMode="ADD" alpha="0.25" />
   </Button>
   
-  <Button parentKey="UnSet" parent="PetPaperDollFrameCompanionFrame" inherits="ZooKeeperFavButton" >
+  <Button name="ZooKeeperFavButtonUnSet" inherits="ZooKeeperFavButton" virtual="true" >
     <KeyValues>
       <KeyValue key="fav" type="boolean" value="false" />
     </KeyValues>

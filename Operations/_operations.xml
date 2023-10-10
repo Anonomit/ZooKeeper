@@ -1,0 +1,13 @@
+<Ui xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+  
+  <Script file="DeprecatedCommands.lua"/>
+  
+  <Script file="Macro.lua"/>
+  <Script file="MacroExtender.lua"/>
+  
+  <Script file="Mount.lua"/>
+  <Script file="MountTracking.lua"/>
+  
+  <Script file="Pet.lua"/>
+  <Script file="PetTracking.lua"/>
+</Ui>

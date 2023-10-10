@@ -6,81 +6,6 @@ local Addon = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 
 
 
-local strLower  = string.lower
-local strFind   = string.find
-local strMatch  = string.match
-local strGsub   = string.gsub
-
-local tinsert   = table.insert
-local tblRemove = table.remove
-local tblConcat = table.concat
-
-local tostring = tostring
-
-
-
-
-
-
-
---  ███████╗██╗  ██╗██████╗  █████╗ ███╗   ██╗███████╗██╗ ██████╗ ███╗   ██╗███████╗
---  ██╔════╝╚██╗██╔╝██╔══██╗██╔══██╗████╗  ██║██╔════╝██║██╔═══██╗████╗  ██║██╔════╝
---  █████╗   ╚███╔╝ ██████╔╝███████║██╔██╗ ██║███████╗██║██║   ██║██╔██╗ ██║███████╗
---  ██╔══╝   ██╔██╗ ██╔═══╝ ██╔══██║██║╚██╗██║╚════██║██║██║   ██║██║╚██╗██║╚════██║
---  ███████╗██╔╝ ██╗██║     ██║  ██║██║ ╚████║███████║██║╚██████╔╝██║ ╚████║███████║
---  ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝
-
-do
-  Addon.expansions = {
-    retail  = 9,
-    wrath   = 3,
-    wotlk   = 3,
-    tbc     = 2,
-    bcc     = 2,
-    classic = 1,
-  }
-  Addon.expansionLevel = tonumber(GetBuildInfo():match"^(%d+)%.")
-  if Addon.expansionLevel >= Addon.expansions.retail then
-    Addon.expansionName = "retail"
-  elseif Addon.expansionLevel >= Addon.expansions.wrath then
-    Addon.expansionName = "wrath"
-  elseif Addon.expansionLevel == Addon.expansions.tbc then
-    Addon.expansionName = "tbc"
-  elseif Addon.expansionLevel == Addon.expansions.classic then
-    Addon.expansionName = "classic"
-  end
-  Addon.isRetail  = Addon.expansionName == "retail"
-  Addon.isWrath   = Addon.expansionName == "wrath"
-  Addon.isTBC     = Addon.expansionName == "tbc"
-  Addon.isClassic = Addon.expansionName == "classic"
-end
-
-
-
---  ███╗   ██╗ █████╗ ███╗   ███╗███████╗███████╗
---  ████╗  ██║██╔══██╗████╗ ████║██╔════╝██╔════╝
---  ██╔██╗ ██║███████║██╔████╔██║█████╗  ███████╗
---  ██║╚██╗██║██╔══██║██║╚██╔╝██║██╔══╝  ╚════██║
---  ██║ ╚████║██║  ██║██║ ╚═╝ ██║███████╗███████║
---  ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝╚══════╝
-
-do
-  Addon.MY_NAME = UnitName"player"
-end
-
-
-
-
---  ██████╗  █████╗  ██████╗███████╗███████╗
---  ██╔══██╗██╔══██╗██╔════╝██╔════╝██╔════╝
---  ██████╔╝███████║██║     █████╗  ███████╗
---  ██╔══██╗██╔══██║██║     ██╔══╝  ╚════██║
---  ██║  ██║██║  ██║╚██████╗███████╗███████║
---  ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝╚══════╝
-
-do
-  Addon.MY_RACE_NAME = UnitRace"player"
-end
 
 
 
@@ -92,27 +17,8 @@ end
 --   ╚═════╝╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚══════╝
 
 do
-  local _
-  Addon.MY_CLASS_NAME, _, Addon.MY_CLASS = UnitClass"player"
+  Addon.MY_CLASS_NAME, Addon.MY_CLASS = UnitClassBase"player"
 end
-
-
-
---  ██╗     ███████╗██╗   ██╗███████╗██╗     ███████╗
---  ██║     ██╔════╝██║   ██║██╔════╝██║     ██╔════╝
---  ██║     █████╗  ██║   ██║█████╗  ██║     ███████╗
---  ██║     ██╔══╝  ╚██╗ ██╔╝██╔══╝  ██║     ╚════██║
---  ███████╗███████╗ ╚████╔╝ ███████╗███████╗███████║
---  ╚══════╝╚══════╝  ╚═══╝  ╚══════╝╚══════╝╚══════╝
-
-do
-  Addon.MAX_LEVEL = MAX_PLAYER_LEVEL_TABLE[GetExpansionLevel()]
-  
-  Addon.MY_LEVEL = UnitLevel"player"
-  
-  Addon:RegisterEvent("PLAYER_LEVEL_UP", function(_, level) Addon.MY_LEVEL = UnitLevel"player" end)
-end
-
 
 
 --  ██╗      ██████╗  ██████╗ █████╗ ████████╗██╗ ██████╗ ███╗   ██╗███████╗
@@ -123,6 +29,15 @@ end
 --  ╚══════╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝
 
 do
+
+  Addon.zones = {
+    Oculus = 143,
+  }
+  
+  
+
+
+
   local knowsColdWeatherFlying = nil
   local function KnowsColdWeatherFlying()
     if not knowsColdWeatherFlying then
@@ -148,6 +63,75 @@ do
   Addon.flightPermissionLocations = setmetatable({
     [571] = KnowsColdWeatherFlying, -- Northrend,
   }, {__index = function() return function() return true end end})
+end
+
+
+
+
+
+
+
+
+--  ██╗████████╗███████╗███╗   ███╗███████╗
+--  ██║╚══██╔══╝██╔════╝████╗ ████║██╔════╝
+--  ██║   ██║   █████╗  ██╔████╔██║███████╗
+--  ██║   ██║   ██╔══╝  ██║╚██╔╝██║╚════██║
+--  ██║   ██║   ███████╗██║ ╚═╝ ██║███████║
+--  ╚═╝   ╚═╝   ╚══════╝╚═╝     ╚═╝╚══════╝
+
+do
+  Addon.items = {
+    -- Oculus
+    EmeraldEssence = 37815,
+    AmberEssence   = 37859,
+    RubyEssence    = 37860,
+  }
+end
+
+
+
+
+
+
+
+
+--  ███████╗██████╗ ███████╗██╗     ██╗     ███████╗
+--  ██╔════╝██╔══██╗██╔════╝██║     ██║     ██╔════╝
+--  ███████╗██████╔╝█████╗  ██║     ██║     ███████╗
+--  ╚════██║██╔═══╝ ██╔══╝  ██║     ██║     ╚════██║
+--  ███████║██║     ███████╗███████╗███████╗███████║
+--  ╚══════╝╚═╝     ╚══════╝╚══════╝╚══════╝╚══════╝
+
+do
+  Addon.spells = {
+    TravelForm      = 783,
+    AquaticForm     = 1066,
+    FlightForm      = 33943,
+    SwiftFlightForm = 40120,
+  }
+  
+  Addon.aurasToCancel = {
+    -- Druid shapeshift forms
+    BearForm     = 5487,
+    DireBearForm = 9634,
+    CatForm      = 768,
+    MoonkinForm  = 24858,
+    TreeOfLife   = 33891,
+    
+    -- Oculus
+    EmeraldEssence = 49345,
+    AmberEssence   = 49461,
+    RubyEssence    = 49462,
+  }
+  for k, v in pairs(Addon.aurasToCancel) do
+    Addon.spells[k] = v
+  end
+  
+  Addon.spellNames = setmetatable({}, {__index = function(self, k) self[k] = GetSpellInfo(Addon.spells[k]) or "?" return self[k] end})
+  
+  for name in pairs(Addon.spells) do
+    nop(Addon.spellNames[name])
+  end
 end
 
 

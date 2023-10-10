@@ -12,15 +12,23 @@ do
   Addon.GUI = {}
   local GUI = Addon.GUI
   
-  local links = setmetatable({}, {__index = function(t, k) return k end})
-  
-  function GUI:SwapLinks(link1, link2)
-    links[link1], links[link2] = links[link2], links[link1]
-  end
-  
   local defaultInc   = 1000
   local defaultOrder = 1000
   local order        = defaultOrder
+  
+  local dbType = ""
+  local GetFunction      = function(keys) local funcName = format("Get%sOption",   dbType) return function(info)      return Addon[funcName](Addon, unpack(keys))      end end
+  local SetFunction      = function(keys) local funcName = format("Set%sOption",   dbType) return function(info, val)        Addon[funcName](Addon, val, unpack(keys)) end end
+  local ResetFunction    = function(keys) local funcName = format("Reset%sOption", dbType) return function(info, val)        Addon[funcName](Addon, unpack(keys))      end end
+  local GetColorFunction = function(keys) local funcName = format("Get%sOption",   dbType) return function(info)          return Addon:ConvertColorToBlizzard(Addon[funcName](Addon, unpack(keys)))            end end
+  local SetColorFunction = function(keys) local funcName = format("Set%sOption",   dbType) return function(info, r, g, b)        Addon[funcName](Addon, Addon:ConvertColorFromBlizzard(r, g, b), unpack(keys)) end end
+  
+  function GUI:SetDBType(typ)
+    dbType = typ or ""
+  end
+  function GUI:ResetDBType()
+    self:SetDBType()
+  end
   
   function GUI:GetOrder()
     return order
@@ -42,8 +50,8 @@ do
     if type(keys) ~= "table" then keys = {keys} end
     local key = widgetType .. "_" .. (tblConcat(keys, ".") or "")
     opts.args[key] = {name = name, desc = desc, type = widgetType, order = order or self:Order(), disabled = disabled}
-    opts.args[key].set = function(info, val)        Addon:SetOption(val, unpack(keys)) end
-    opts.args[key].get = function(info)      return Addon:GetOption(unpack(keys))      end
+    opts.args[key].set = SetFunction(keys)
+    opts.args[key].get = GetFunction(keys)
     return opts.args[key]
   end
   
@@ -72,8 +80,8 @@ do
   function GUI:CreateReverseToggle(opts, keys, name, desc, disabled)
     local option = self:CreateEntry(opts, keys, name, desc, "toggle", disabled)
     local set, get = option.set, option.get
-    option.set = function(info, val)        set(info, not val) end
     option.get = function(info)      return not get()          end
+    option.set = function(info, val)        set(info, not val) end
     return option
   end
   
@@ -107,8 +115,8 @@ do
   
   function GUI:CreateColor(opts, keys, name, desc, disabled)
     local option = self:CreateEntry(opts, keys, name, desc, "color", disabled)
-    option.set   = function(info, r, g, b)        Addon:SetOption(Addon:ConvertColorFromBlizzard(r, g, b), unpack(keys)) end
-    option.get   = function(info)          return Addon:ConvertColorToBlizzard(Addon:GetOption(unpack(keys)))            end
+    option.get   = GetColorFunction(keys)
+    option.set   = SetColorFunction(keys)
     return option
   end
   
@@ -117,21 +125,27 @@ do
     option.func  = func
     return option
   end
+  function GUI:CreateReset(opts, keys, func, disabled)
+    local option = self:CreateEntry(opts, {"reset", unpack(keys)}, Addon.L["Reset"], nil, "execute", disabled)
+    option.func  = func or ResetFunction(keys)
+    option.width = 0.6
+    return option
+  end
   
   function GUI:CreateGroup(opts, key, name, desc, groupType, disabled)
-    key = "group_" .. links[key]
+    key = tostring(key)
     opts.args[key] = {name = name, desc = desc, type = "group", childGroups = groupType, args = {}, order = self:Order(), disabled = disabled}
     return opts.args[key]
   end
-  
   function GUI:CreateGroupBox(opts, name)
-    local key = "group_" .. self:Order(-1)
-    opts.args[key] = {name = name, type = "group", args = {}, order = self:Order(), inline = true}
-    return opts.args[key]
+    local key = self:Order(-1)
+    local option = self:CreateGroup(opts, key, name)
+    option.inline = true
+    return option
   end
   
-  function GUI:CreateGroupTop(name, groupType, disabled)
-    return {name = name, type = "group", childGroups = groupType, args = {}, order = self:Order(), disabled = disabled}
+  function GUI:CreateOpts(name, groupType, disabled)
+    return {name = name, type = "group", childGroups = groupType, args = {}, order = self:Order()}
   end
 end
 

@@ -11,43 +11,65 @@ local This = Addon.UI.FavoriteButtons
 
 
 
+local journals = {
+  Mount = {
+    parent = "MountJournal",
+    anchor = "MountJournalMountButton",
+    GetID  = function() return MountJournal.selectedMountID end,
+  },
+  Pet = {
+    parent = "PetJournal",
+    anchor = "PetJournalSummonButton",
+    GetID  = function() return PetJournalPetCard.petID end,
+  },
+}
+
+
+local function CreateButtons()
+  favoriteButtons = {}
+  for journal in pairs(journals) do
+    for _, mode in ipairs{"Set", "Unset"} do
+      local button = CreateFrame("Button", nil, _G[journals[journal].parent], "ZooKeeperFavButton" .. mode)
+      button:SetPoint("LEFT", _G[journals[journal].anchor], "RIGHT", 0, 0)
+      button.journal = journal
+      tinsert(favoriteButtons, button)
+    end
+  end
+  return favoriteButtons
+end
+
+
 function This:Init()
-  hooksecurefunc("PetPaperDollFrame_UpdateCompanionPreview", function() self:UpdateAll() end)
+  local favoriteButtons = CreateButtons()
+  
+  function This:UpdateAll()
+    Addon:Map(favoriteButtons, function(v) return v:Update() end)
+  end
+  
+  hooksecurefunc("MountJournal_SetSelected", function() self:UpdateAll() end)
 end
 
 
 
 function This.OnLoad(self)
   self.Update = function()
-    local selected = PetPaperDollFrame_FindCompanionIndex()
-    if selected > 0 then
-      local spellID = select(3, GetCompanionInfo(PetPaperDollFrameCompanionFrame.mode, selected))
-      self:SetShown(self.fav ~= (Addon:GetOption("fav", spellID) or false))
+    local id = journals[self.journal].GetID()
+    if id then
+      self:SetShown(self.fav ~= (Addon:GetOption("fav", id) or false))
     end
+    return self
   end
 end
 
 function This.OnClick(self)
-  local selected = PetPaperDollFrame_FindCompanionIndex()
-  if selected > 0 then
-    local spellID = select(3, GetCompanionInfo(PetPaperDollFrameCompanionFrame.mode, selected))
-    Addon:ToggleOption("fav", spellID)
+  local id = journals[self.journal].GetID()
+  if id then
+    Addon:ToggleOption("fav", id)
     This:UpdateAll()
-    Addon.UI.FavoriteIcons:UpdateAll()
+    -- Addon.UI.FavoriteIcons:UpdateAll()
   end
   PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
 end
 
 
-do
-  local favoriteButtons
-  function This:UpdateAll()
-    if not favoriteButtons then
-      favoriteButtons = Addon:MakeLookupTable({[PetPaperDollFrameCompanionFrame.Set] = PetPaperDollFrameCompanionFrame.UnSet}, nil, true)
-    end
-    local button = next(favoriteButtons, button)
-    button:Update()
-    next(favoriteButtons, button):Update()
-  end
-end
 

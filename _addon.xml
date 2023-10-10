@@ -4,6 +4,10 @@
   
   <Include file="Init\_init.xml"/>
   
+  <Include file="Data\_data.xml"/>
+  
+  <Include file="Operations\_operations.xml"/>
+  
   <Include file="UI\_ui.xml"/>
   
   <Include file="Config\_config.xml"/>

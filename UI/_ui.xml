@@ -2,7 +2,5 @@
   
   <Script file="UI.lua" />
   
-  <Include file="UI\FavoriteIcons.xml"/>
-  
   <Include file="UI\FavoriteButtons.xml"/>
 </Ui>

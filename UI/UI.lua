@@ -13,6 +13,5 @@ local This = Addon.UI
 
 function This:Init()
   self.FavoriteButtons:Init()
-  self.FavoriteIcons  :Init()
 end
 
