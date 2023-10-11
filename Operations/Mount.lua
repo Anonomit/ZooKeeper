@@ -89,6 +89,12 @@ local function ModifyMountButton()
       travelLine:Add(condition, Addon.spellNames.FlightForm)
       options = options .. condition
     end
+    if IsSpellKnown(Addon.spells.CatForm) and ({GetTalentInfo(2, 12)})[5] > 0 then -- Cat form has a speed boost
+      local condition = "[noflyable,noswimming,nomounted]"
+      travelLine:Add(condition, Addon.spellNames.CatForm)
+      options = options .. condition
+    end
+    
     
     if travelLine:IsComplete() then
       for aura in pairs(Addon.aurasToCancel) do

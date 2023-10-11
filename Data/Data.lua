@@ -104,6 +104,7 @@ end
 
 do
   Addon.spells = {
+    CatForm         = 768,
     TravelForm      = 783,
     AquaticForm     = 1066,
     FlightForm      = 33943,
@@ -114,7 +115,6 @@ do
     -- Druid shapeshift forms
     BearForm     = 5487,
     DireBearForm = 9634,
-    CatForm      = 768,
     MoonkinForm  = 24858,
     TreeOfLife   = 33891,
     
