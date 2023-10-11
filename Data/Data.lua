@@ -150,8 +150,8 @@ do
     creatureID,
     typeFlags = &1 if flying mount, &2 if usable underwater, &4 if usable on ground and also in flight,
     mountFlags (from Mount.db2 in later expansions),
-    flightSpeeds,
     groundSpeeds,
+    flightSpeeds,
     swimSpeeds,
     faction (added by the code on the bottom of the file),
     function that checks extra conditions for whether the mount is usable, very loosely (added by the code on the bottom of the file),
@@ -601,6 +601,47 @@ do
   
   
   Addon.aqMounts = setmetatable(Addon:MakeLookupTable({25953, 26054, 26055, 26056}, true), {__index = function() return false end})
+  
+  
+  
+  
+  
+  -- collections log update has made mounts depend on riding skill. 410 speed mounts appear to be not affected
+  for id, data in pairs(Addon.mounts) do
+    local groundSpeeds, flightSpeeds, swimSpeeds = data[4], data[5], data[6]
+    
+    if id == 61451 then
+      print(flightSpeeds)
+    end
+    
+    if flightSpeeds == 150 then
+      flightSpeeds = {150, 280}
+    elseif type(flightSpeeds) == "table" then
+      for i, speed in ipairs(flightSpeeds) do
+        if speed == 150 and flightSpeeds[i+1] ~= 280 then
+          tinsert(flightSpeeds, i, 280)
+          break
+        end
+      end
+    end
+    if groundSpeeds == 60 then
+      groundSpeeds = {60, 100}
+    elseif type(groundSpeeds) == "table" then
+      for i, speed in ipairs(groundSpeeds) do
+        if speed == 60 and groundSpeeds[i+1] ~= 100 then
+          tinsert(groundSpeeds, i, 100)
+          break
+        end
+      end
+    end
+    data[4] = groundSpeeds
+    data[5] = flightSpeeds
+    data[6] = swimSpeeds
+  end
+  
+  
+  
+  
 end
 
 

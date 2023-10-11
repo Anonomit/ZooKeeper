@@ -103,7 +103,7 @@ do
         fastest = speed[1]
         for i = 2, #speed do
           if speed[i] > fastest then
-            fastest = speed
+            fastest = speed[i]
           end
         end
       end
