@@ -15,6 +15,8 @@ end
 
 
 local mountIndex               = 0
+local allMounts                = {}
+local allMountsNeedsRefresh    = true
 local idealMounts              = {}
 local idealMountsNeedsRefresh  = true
 local usableMounts             = {}
@@ -25,7 +27,18 @@ local usableMountsNeedsRefresh = true
 
 
 
-
+local function RefreshAllMounts()
+  wipe(allMounts)
+  
+  local count = 0
+  for _, i in ipairs(C_MountJournal.GetMountIDs()) do
+    local creatureName, spellID, icon, active, isUsable, sourceType, isFavorite, isFactionSpecific, faction, hideOnChar, isCollected, mountID = C_MountJournal.GetMountInfoByID(i)
+    allMounts[i] = {name = creatureName, spellID = spellID, active = active}
+    count = count + 1
+  end
+  
+  allMountsNeedsRefresh = false
+end
 
 
 local function RefreshUsableMounts()
@@ -43,6 +56,7 @@ local function RefreshUsableMounts()
   Addon:DebugfIfOutput("usableSelected", "Usable mounts updated: %d found%s", count, table.concat(Addon:Map(Addon:Squish(usableMounts), function(v, k) return format("\n%d: %s", k, v.name) end), ""))
   
   usableMountsNeedsRefresh = false
+  RefreshAllMounts()
 end
 local function AttemptRefreshUsableMounts()
   if usableMountsNeedsRefresh then
@@ -51,12 +65,12 @@ local function AttemptRefreshUsableMounts()
 end
 
 
-local function InsertMount(i, mounts, mountType)
-  tinsert(mounts[mountType], i)
-  if Addon:GetOption("fav", usableMounts[i].spellID) then
-    tinsert(mounts.fav[mountType], i)
+local function InsertMount(id, mounts, mountType)
+  tinsert(mounts[mountType], id)
+  if Addon:GetOption("fav", id) then
+    tinsert(mounts.fav[mountType], id)
   end
-  Addon:DebugIfOutput("mountTypes", "%s can %s", usableMounts[i].name, mountType)
+  Addon:DebugIfOutput("mountTypes", "%s can %s", usableMounts[id].name, mountType)
 end
 local function FilterToFastestMounts(candidates, mountType)
   wipe(idealMounts)
@@ -95,19 +109,19 @@ local function RefreshIdealMounts()
   local mounts = {fly = {}, ground = {}, swim = {}, fav = {fly = {}, ground = {}, swim = {}}}
 
   local flyable = false
-  for i, mountData in pairs(usableMounts) do
+  for id, mountData in pairs(usableMounts) do
     local _, typeFlags, mountFlags, flightSpeeds, groundSpeeds, swimSpeeds = Addon:GetMountInfo(mountData.spellID)
     
     if bit.band(typeFlags or 0, 0x5) == 0 then -- Mount is usable on ground
-      InsertMount(i, mounts, "ground")
+      InsertMount(id, mounts, "ground")
     end
     
     if bit.band(typeFlags or 0, 0x2) ~= 0 then -- Mount is usable in water
-      InsertMount(i, mounts, "swim")
+      InsertMount(id, mounts, "swim")
     end
     
     if bit.band(typeFlags or 0, 0x1) ~= 0 then -- Is flying mount
-      InsertMount(i, mounts, "fly")
+      InsertMount(id, mounts, "fly")
       flyable = IsFlyableArea()
     end
   end
@@ -138,6 +152,14 @@ local function RefreshIdealMounts()
       mountType = "ground"
       fastestSpeed = FilterToFastestMounts(#mounts.fav[mountType] > 0 and mounts.fav[mountType] or mounts[mountType], mountType)
     else
+      wipe(idealMounts)
+    end
+  end
+  
+  if mountType == "fly" and Addon.MY_CLASS_NAME == "DRUID" then
+    if IsSpellKnown(Addon.spells.SwiftFlightForm) and fastestSpeed <= 280 then
+      wipe(idealMounts)
+    elseif IsSpellKnown(Addon.spells.FlightForm) and fastestSpeed <= 150 then
       wipe(idealMounts)
     end
   end
@@ -186,10 +208,10 @@ function Addon:HasValidMounts()
   return #idealMounts > 0
 end
 
-function Addon:IsRidingValidMount()
+function Addon:IsRidingMount()
   AttemptRefreshUsableMounts()
-  for _, id in ipairs(idealMounts) do
-    if usableMounts[id].active then
+  for id, data in pairs(allMounts) do
+    if data.active then
       return true
     end
   end
@@ -203,6 +225,7 @@ function Addon:SelectMount()
     mountIndex = (mountIndex+1) % (#idealMounts)
     mount = idealMounts[mountIndex+1]
   end
+  self:DebugfIfOutput("finalSelectionMade", "Mount selected: %s (%d)", usableMounts[mount].name, mount)
   return mount
 end
 
@@ -210,25 +233,27 @@ end
 function Addon:StartMountTracking()
   hooksecurefunc(C_MountJournal, "SummonByID", TrackLastMount)
   
-  self:RegisterEvent("COMPANION_UPDATE", function(self, category) if category == "MOUNT" then WipeUsableMounts() end end)
-  self:RegisterEvent("MOUNT_JOURNAL_USABILITY_CHANGED", WipeUsableMounts)
   self:RegisterEvent("NEW_MOUNT_ADDED", WipeUsableMounts)
+  self:RegisterEvent("ZONE_CHANGED", WipeUsableMounts)
   
   -- self:RegisterEvent("ZONE_CHANGED", WipeUsableMounts)
   -- self:RegisterEvent("PLAYER_REGEN_ENABLED", WipeUsableMounts)
 end
 
 
-  -- hooksecurefunc(C_PetJournal, "SummonPetByGUID", TrackLastPet)
-  -- self:RegisterEvent("COMPANION_LEARNED", WipeUsableMounts)
+
+
+Addon.WipeUsableMounts = WipeUsableMounts
 
 
 
-
-
-
-
-
+-- debug
+function Addon:GetUsableMounts()
+  return usableMounts
+end
+function Addon:GetIdealMounts()
+  return idealMounts
+end
 
 
 

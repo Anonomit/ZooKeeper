@@ -72,7 +72,8 @@ function Addon:OnEnable()
   self:RegisterChatCommand("mount",     "OldMountCommand")
   self:RegisterChatCommand("critter",   "OldCritterCommand")
   self:RegisterChatCommand("companion", "OldCompanionCommand")
-
+  
+  self:StartTracking()
   self:StartMountTracking()
   self:StartCritterTracking()
   self:InitMountButton()

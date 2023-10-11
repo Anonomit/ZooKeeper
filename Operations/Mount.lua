@@ -31,7 +31,7 @@ function Addon:Mount()
   if InCombatLockdown() then return end
   if GetShapeshiftFormID() then return end
   
-  if not self:HasValidMounts() or self:IsRidingValidMount() then
+  if not self:HasValidMounts() or self:IsRidingMount() then
     if self.MY_CLASS_NAME == "DRUID" then
       dismountQueued = true
     else

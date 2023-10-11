@@ -133,19 +133,19 @@ function Addon:GetSummonedCritter()
   end
 end
 
-function Addon:HasSummonedValidCritter()
+function Addon:HasSummonedCritter()
   AttemptRefreshUsableCritters()
   return self:GetSummonedCritter() and true or false
 end
 
 function Addon:SelectCritter()
   AttemptRefreshIdealCritters()
-  local mount = idealCritters[critterIndex+1]
-  if mount == lastCritterID then
+  local critter = idealCritters[critterIndex+1]
+  if critter == lastCritterID then
     critterIndex = (critterIndex+1) % (#idealCritters)
-    mount = idealCritters[critterIndex+1]
+    critter = idealCritters[critterIndex+1]
   end
-  return mount
+  return critter
 end
 
 
@@ -155,12 +155,25 @@ end
 function Addon:StartCritterTracking()
   hooksecurefunc(C_PetJournal, "SummonPetByGUID", TrackLastCritter)
   
-  self:RegisterEvent("COMPANION_UPDATE", function(self, category) if category == "CRITTER" then WipeUsablePets() end end)
-  self:RegisterEvent("MOUNT_JOURNAL_USABILITY_CHANGED", WipeUsablePets)
   self:RegisterEvent("NEW_PET_ADDED", WipeUsablePets)
   
   -- self:RegisterEvent("ZONE_CHANGED", WipeUsablePets)
   -- self:RegisterEvent("PLAYER_REGEN_ENABLED", WipeUsablePets)
+end
+
+
+
+
+Addon.WipeUsablePets = WipeUsablePets
+
+
+
+-- debug
+function Addon:GetUsableCritters()
+  return usableCritters
+end
+function Addon:GetIdealCritters()
+  return idealCritters
 end
 
 

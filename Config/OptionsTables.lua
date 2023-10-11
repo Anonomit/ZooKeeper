@@ -104,6 +104,7 @@ local function MakeDebugOptions(opts, categoryName)
         {"usableReset",              "Usable Reset"},
         {"idealSelected",            "Ideal Selected"},
         {"idealReset",               "Ideal Reset"},
+        {"finalSelectionMade",       "Final Selection Made"},
         {"mountTypes",               "Mount Types"},
         {"mountType",                "Selected Mount Type"},
         {"initialMountPool",         "Initial Mount Pool"},
