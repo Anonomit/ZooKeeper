@@ -25,6 +25,7 @@ local L = setmetatable({}, {
 Addon.L = L
 
 
+L["Options"] = OPTIONS
 
 L["Enable"]  = ENABLE
 L["Disable"] = DISABLE
