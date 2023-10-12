@@ -218,6 +218,16 @@ function Addon:IsRidingMount()
   return false
 end
 
+function Addon:IsRidingIdealMount()
+  AttemptRefreshIdealMounts()
+  for i, id in ipairs(idealMounts) do
+    if allMounts[id].active then
+      return true
+    end
+  end
+  return false
+end
+
 function Addon:SelectMount()
   AttemptRefreshIdealMounts()
   local mount = idealMounts[mountIndex+1]

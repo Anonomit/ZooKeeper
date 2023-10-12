@@ -31,13 +31,17 @@ function Addon:Mount()
   if InCombatLockdown() then return end
   if GetShapeshiftFormID() then return end
   
-  if not self:HasValidMounts() or self:IsRidingMount() then
+  local doMount = true
+  
+  if self:IsRidingMount() then
+    doMount = not self:IsRidingIdealMount()
     if self.MY_CLASS_NAME == "DRUID" then
       dismountQueued = true
     else
       Dismount()
     end
-  else
+  end
+  if self:HasValidMounts() and doMount then
     if GetUnitSpeed"player" ~= 0 then return end
     C_MountJournal.SummonByID(self:SelectMount())
   end
