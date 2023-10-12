@@ -104,11 +104,17 @@ end
 
 do
   Addon.spells = {
+    -- Druid shapeshift forms
     CatForm         = 768,
     TravelForm      = 783,
     AquaticForm     = 1066,
     FlightForm      = 33943,
     SwiftFlightForm = 40120,
+    
+    -- Oculus
+    EmeraldEssence = 49345,
+    AmberEssence   = 49461,
+    RubyEssence    = 49462,
   }
   
   Addon.aurasToCancel = {
@@ -117,11 +123,6 @@ do
     DireBearForm = 9634,
     MoonkinForm  = 24858,
     TreeOfLife   = 33891,
-    
-    -- Oculus
-    EmeraldEssence = 49345,
-    AmberEssence   = 49461,
-    RubyEssence    = 49462,
   }
   for k, v in pairs(Addon.aurasToCancel) do
     Addon.spells[k] = v

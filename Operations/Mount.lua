@@ -15,12 +15,36 @@ local BUTTON_NAME = "ZKM"
 
 
 
+--[[
+Mounting model
 
 
+if druid
+  if I intend to shapeshift then
+    cancelaura all shapeshift forms which cannot be used for speed
+
+if in oculus
+  use oculus mount
+otherwise and if not in combat and not in shapeshift form
+  (lua)
+  if can't mount or already riding one
+    if a druid
+      queue a dismount
+    otherwise
+      dismount
+  otherwise
+    use the mount (unless I'm moving or am a druid with equal speed flying form)
+
+dismount if in combat
+
+if a druid
+  use a shapeshift form
+
+if a druid and dismounting is queued
+  dismount
 
 
-
-
+--]]
 
 
 
@@ -93,6 +117,7 @@ local function ModifyMountButton()
       travelLine:Add(condition, Addon.spellNames.FlightForm)
       options = options .. condition
     end
+    
     if IsSpellKnown(Addon.spells.CatForm) and ({GetTalentInfo(2, 12)})[5] > 0 then -- Cat form has a speed boost
       local condition = "[noflyable,noswimming,nomounted]"
       travelLine:Add(condition, Addon.spellNames.CatForm)

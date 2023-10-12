@@ -259,9 +259,11 @@ Addon.WipeUsableMounts = WipeUsableMounts
 
 -- debug
 function Addon:GetUsableMounts()
+  AttemptRefreshUsableMounts()
   return usableMounts
 end
 function Addon:GetIdealMounts()
+  AttemptRefreshIdealMounts()
   return idealMounts
 end
 
