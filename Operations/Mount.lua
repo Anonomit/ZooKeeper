@@ -132,15 +132,18 @@ local function ModifyMountButton()
     end
   end
   
-  if C_Map.GetBestMapForUnit"player" == Addon.zones.Oculus then
-    for _, key in ipairs{"EmeraldEssence", "AmberEssence", "RubyEssence"} do
-      macroText:AddLine(Addon.Line("use"):Add("item:" .. Addon.items[key]))
+  local map = C_Map.GetBestMapForUnit"player"
+  if map == Addon.zones.IcecrownCitadel then
+    macroText:AddLine("/use [@cursor]Goblin Rocket Pack")
+  elseif map == Addon.zones.Oculus then
+    for key, id in pairs(Addon.items.Oculus) do
       macroText:AddLine(Addon.Line("cancelaura"):Add(Addon.spellNames[key]))
+      macroText:AddLine(Addon.Line("use"):Add("item:" .. id))
     end
-  else
-    macroText:AddLine("/run " .. ADDON_NAME .. ":Mount()")
-    macroText:AddLine"/dismount [combat]"
   end
+  
+  macroText:AddLine("/run " .. ADDON_NAME .. ":Mount()")
+  macroText:AddLine"/dismount [combat]"
   
   
   macroText:AddDruidLine(travelLine)

@@ -31,7 +31,8 @@ end
 do
 
   Addon.zones = {
-    Oculus = 143,
+    Oculus          = 143,
+    IcecrownCitadel = 187,
   }
   
   
@@ -81,10 +82,11 @@ end
 
 do
   Addon.items = {
-    -- Oculus
-    EmeraldEssence = 37815,
-    AmberEssence   = 37859,
-    RubyEssence    = 37860,
+    Oculus = {
+      EmeraldEssence = 37815,
+      AmberEssence   = 37859,
+      RubyEssence    = 37860,
+    },
   }
 end
 
