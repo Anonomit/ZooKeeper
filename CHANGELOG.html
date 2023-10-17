@@ -1,42 +1,11 @@
-<h1>2.1.1</h1>
-<h3>Fixes</h3>
-<ul>
-  <li>Improve remounting logic.</li>
-  <li>Add missing translation.</li>
-  <li>Fix error with BigWigs auto release script (updates now showing up on CurseForge/Wago again).</li>
-</ul>
-
-
-<h1>2.1.0</h1>
+<h1>2.2.0</h1>
 <h3>New Features</h3>
 <ul>
-  <li>Druid's Cat Form is now considered, as long as the Feral Swiftness talent is active.</li>
+  <li>Shaman's Ghost Wolf is now used. It should only be used while in combat, or when no mounts are available.</li>
+  <li>Goblin Rocket Pack is used (when available) in Icecrown Citadel.</li>
 </ul>
 <h3>Fixes</h3>
 <ul>
-  <li>Fixed various mounting issues.</li>
-  <li>Should now understand that mount speed changes with riding skill (up to +280% it seems).</li>
+  <li>Fixed mounting for some classes with multiple hotbars, such as priests, warriors, and rogues.</li>
+  <li>Fixed an issue with higher level druids that could cause the mounting script to misbehave, usually by not exiting shapeshift forms.</li>
 </ul>
-
-
-<h1>2.0.0</h1>
-<h3>New Features</h3>
-<ul>
-  <li>Mounting as a druid now uses an appropriate shadpeshift form if it makes more sense (combat, swimming, moving, etc.). This is currently not configurable.</li>
-</ul>
-<h3>Changes</h3>
-<ul>
-  <li>Old slash commands no longer work, due to the Collection Log.</li>
-  <ul> 
-    <li>Mounting is now done with <strong>/click ZKM</strong> (ZooKeeper Mount).</li>
-    <li>Summoning a pet is now done with <strong>/click ZKP</strong> (ZooKeeper Pet).</li>
-    <li>It is no longer possible to specify a certain type (ground/fly/swim) or speed of mount. You may still set favorite mounts and the addon will use them unless a faster one is found.</li>
-  </ul>
-  <li>Favorite pets have been reset due to Blizzard moving to a different way of storing pets. Favorite mounts have been preserved.</li>
-</ul>
-<h3>Fixes</h3>
-<ul>
-  <li>Updated to work with the new Collection Log.</li>
-</ul>
-
-
