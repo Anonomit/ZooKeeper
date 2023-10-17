@@ -244,9 +244,10 @@ function Addon:StartMountTracking()
   hooksecurefunc(C_MountJournal, "SummonByID", TrackLastMount)
   
   self:RegisterEvent("NEW_MOUNT_ADDED", WipeUsableMounts)
-  self:RegisterEvent("ZONE_CHANGED", WipeUsableMounts)
+  self:RegisterEvent("ZONE_CHANGED", WipeUsableMounts) -- for zone-specific situations
+  self:RegisterEvent("LEARNED_SPELL_IN_TAB", WipeUsableMounts) -- for when a new spaheshift is learned
   
-  -- self:RegisterEvent("ZONE_CHANGED", WipeUsableMounts)
+  
   -- self:RegisterEvent("PLAYER_REGEN_ENABLED", WipeUsableMounts)
 end
 

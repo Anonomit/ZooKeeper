@@ -60,7 +60,7 @@ end
 
 function Addon:Mount()
   if InCombatLockdown() then return end
-  if Addon.shapeshiftFormIDs[GetShapeshiftFormID() or 0] then return end
+  if Addon.shapeshiftFormIDs[GetShapeshiftFormID() or 0] then return end -- mounting through lua doesn't cancel shapeshift forms
   
   -- Stop using a normal mount once I have the mount item in Oculus
   if C_Map.GetBestMapForUnit"player" == Addon.zones.Oculus then
@@ -136,6 +136,8 @@ local function ModifyMountButton()
     end
     
   elseif Addon.MY_CLASS_NAME == "SHAMAN" then
+    local options = ""
+    
     if IsSpellKnown(Addon.spells.GhostWolf) then
       local condition
       if Addon:HasValidMounts() then
@@ -143,7 +145,14 @@ local function ModifyMountButton()
       else
         condition = "[novehicleui,outdoors,nomounted]"
       end
+      options = options .. condition
       travelLine:Add(condition, Addon.spellNames.GhostWolf)
+    end
+    
+    if travelLine:IsComplete() then
+      for aura in pairs(Addon.spellsByCategory.shamanForms) do
+        macroText:AddLine(Addon.Line("cancelaura"):Add(options, Addon.spellNames[aura]))
+      end
     end
   end
   
