@@ -105,30 +105,74 @@ end
 --  ╚══════╝╚═╝     ╚══════╝╚══════╝╚══════╝╚══════╝
 
 do
-  Addon.spells = {
-    -- Druid shapeshift forms
-    CatForm         = 768,
-    TravelForm      = 783,
-    AquaticForm     = 1066,
-    FlightForm      = 33943,
-    SwiftFlightForm = 40120,
+  Addon.shapeshiftFormIDs = {
+    --Druid
+    [2]  = true, -- Tree Of Life
+    [3]  = true, -- Travel Form
+    [4]  = true, -- Aquatic Form
+    [5]  = true, -- Bear Form
+    [1]  = true, -- Cat Form
+    [27] = true, -- Swift Flight Form
+    [29] = true, -- Flight Form
+    [31] = true, -- Moonkin Form
+    [32] = true, -- Moonkin Form
+    [33] = true, -- Moonkin Form
+    [34] = true, -- Moonkin Form
+    [36] = true, -- Treant Form
     
-    -- Oculus
-    EmeraldEssence = 49345,
-    AmberEssence   = 49461,
-    RubyEssence    = 49462,
+    -- Priest
+    [28] = false, -- Shadowform
+    
+    -- Rogue
+    [30] = false, -- Stealth
+    
+    -- Shaman
+    [16] = nil, -- Ghost Wolf
+    
+    -- Warlock
+    [22] = nil, -- Metamorphosis
+    
+    -- Warrior
+    [17] = false, -- Battle Stance
+    [18] = false, -- Defensive Stance
+    [19] = false, -- Berserker Stance
   }
   
-  Addon.aurasToCancel = {
-    -- Druid shapeshift forms
-    BearForm     = 5487,
-    DireBearForm = 9634,
-    MoonkinForm  = 24858,
-    TreeOfLife   = 33891,
+  
+  Addon.spellsByCategory = {
+    druidForms = {
+      mounts = {
+        -- Druid shapeshift forms
+        CatForm         = 768,
+        TravelForm      = 783,
+        AquaticForm     = 1066,
+        FlightForm      = 33943,
+        SwiftFlightForm = 40120,
+      },
+      nonMounts = {
+        -- Druid shapeshift forms
+        BearForm     = 5487,
+        DireBearForm = 9634,
+        MoonkinForm  = 24858,
+        TreeOfLife   = 33891,
+      },
+    },
+    shamanForms = {
+      GhostWolf = 2645,
+    }
   }
-  for k, v in pairs(Addon.aurasToCancel) do
-    Addon.spells[k] = v
+  
+  Addon.spells = {}
+  local function Flatten(t)
+    for k, v in pairs(t) do
+      if type(v) == "table" then
+        Flatten(v)
+      else
+        Addon.spells[k] = v
+      end
+    end
   end
+  Flatten(Addon.spellsByCategory)
   
   Addon.spellNames = setmetatable({}, {__index = function(self, k) self[k] = GetSpellInfo(Addon.spells[k]) or "?" return self[k] end})
   

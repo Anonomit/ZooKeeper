@@ -50,22 +50,32 @@ if a druid and dismounting is queued
 
 
 local dismountQueued = false
+local function QueueDismount()
+  dismountQueued = true
+end
+local function DismountIfQueued()
+  Dismount()
+  dismountQueued = false
+end
 
 function Addon:Mount()
   if InCombatLockdown() then return end
-  if GetShapeshiftFormID() then return end
+  if Addon.shapeshiftFormIDs[GetShapeshiftFormID() or 0] then return end
   
-  local doMount = true
-  
-  if self:IsRidingMount() then
-    doMount = not self:IsRidingIdealMount()
-    if self.MY_CLASS_NAME == "DRUID" then
-      dismountQueued = true
-    else
-      Dismount()
+  -- Stop using a normal mount once I have the mount item in Oculus
+  if C_Map.GetBestMapForUnit"player" == Addon.zones.Oculus then
+    for key, id in pairs(Addon.items.Oculus) do
+      if GetItemCount(id) > 0 then
+        return
+      end
     end
   end
-  if self:HasValidMounts() and doMount then
+  
+  
+  if self:IsRidingMount() then
+    QueueDismount()
+  end
+  if self:HasValidMounts() and not self:IsRidingIdealMount() then
     if GetUnitSpeed"player" ~= 0 then return end
     C_MountJournal.SummonByID(self:SelectMount())
   end
@@ -73,10 +83,7 @@ end
 
 function Addon:DismountIfQueued()
   if InCombatLockdown() then return end
-  if dismountQueued then
-    Dismount()
-    dismountQueued = false
-  end
+  DismountIfQueued()
 end
 
 
@@ -90,43 +97,40 @@ local function ModifyMountButton()
   
   local macroText = Addon.MacroText()
   
-  local travelLine
+  local travelLine = Addon.Line"use"
   
-  if UnitClassBase"player" == "DRUID" then
-    travelLine = Addon.Line"use"
-    
+  if Addon.MY_CLASS_NAME == "DRUID" then
     local options = ""
     
     if IsSpellKnown(Addon.spells.AquaticForm) then
-      local condition = "[swimming,nomounted]"
+      local condition = "[novehicleui,swimming,nomounted]"
       travelLine:Add(condition, Addon.spellNames.AquaticForm)
       options = options .. condition
     end
     if IsSpellKnown(Addon.spells.TravelForm) then
-      local condition = "[outdoors,noflyable,noswimming,nomounted]"
+      local condition = "[novehicleui,outdoors,noflyable,noswimming,nomounted]"
       travelLine:Add(condition, Addon.spellNames.TravelForm)
       options = options .. condition
     end
     
     if IsSpellKnown(Addon.spells.SwiftFlightForm) then
-      local condition = "[outdoors,flyable,nocombat,noswimming,nomounted]"
+      local condition = "[novehicleui,outdoors,flyable,nocombat,noswimming,nomounted]"
       travelLine:Add(condition, Addon.spellNames.SwiftFlightForm)
       options = options .. condition
     elseif IsSpellKnown(Addon.spells.FlightForm) then
-      local condition = "[outdoors,flyable,nocombat,noswimming,nomounted]"
+      local condition = "[novehicleui,outdoors,flyable,nocombat,noswimming,nomounted]"
       travelLine:Add(condition, Addon.spellNames.FlightForm)
       options = options .. condition
     end
     
     if IsSpellKnown(Addon.spells.CatForm) and ({GetTalentInfo(2, 12)})[5] > 0 then -- Cat form has a speed boost
-      local condition = "[noflyable,noswimming,nomounted]"
+      local condition = "[novehicleui,noflyable,noswimming,nomounted]"
       travelLine:Add(condition, Addon.spellNames.CatForm)
       options = options .. condition
     end
     
-    
     if travelLine:IsComplete() then
-      for aura in pairs(Addon.aurasToCancel) do
+      for aura in pairs(Addon.spellsByCategory.druidForms.nonMounts) do
         macroText:AddLine(Addon.Line("cancelaura"):Add(options, Addon.spellNames[aura]))
       end
     end
@@ -137,21 +141,24 @@ local function ModifyMountButton()
     macroText:AddLine("/use [@cursor]Goblin Rocket Pack")
   elseif map == Addon.zones.Oculus then
     for key, id in pairs(Addon.items.Oculus) do
-      macroText:AddLine(Addon.Line("cancelaura"):Add(Addon.spellNames[key]))
       macroText:AddLine(Addon.Line("use"):Add("item:" .. id))
     end
+    macroText:AddLine"/run VehicleExit()"
   end
   
   macroText:AddLine("/run " .. ADDON_NAME .. ":Mount()")
+  
+  
+  if travelLine:IsComplete() then
+    macroText:AddLine(travelLine)
+  end
+  
   macroText:AddLine"/dismount [combat]"
-  
-  
-  macroText:AddDruidLine(travelLine)
   
   macroText:AddLine("/run " .. ADDON_NAME .. ":DismountIfQueued()")
   
   if Addon:GetGlobalOption("debugOutput", "macroTextChanged") then
-    Addon:Debugf("Mount macro updated. Lines: %d, Length: %d", #macroText:GetLines(), macroText:GetLength())
+    Addon:Debugf("|cff00ccffMount macro updated. Lines: %d, Length: %d|r", #macroText:GetLines(), macroText:GetLength())
     for _, line in ipairs(macroText:GetLines()) do
       Addon:Debug(line)
     end
