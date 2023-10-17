@@ -112,32 +112,13 @@ local function MakeDebugOptions(opts, categoryName)
         -- {"finalMountPool",           "Final Mount Pool"},
         {"usingFallbackMount",       "Using Fallback Mount"},
         {"macroTextChanged",         "Macro Text Changed"},
-        {"InterfaceOptionsFrameFix", "Interface Options Patch"},
+        {"macroBoundToButton",       "Macro Bound to Button"},
       } do
         if i ~= 1 then
           GUI:CreateNewline(opts)
         end
         GUI:CreateToggle(opts, {"debugOutput", data[1]}, data[2], nil, disabled).width = 2
       end
-      
-      GUI:CreateToggle(opts, {"debugOutput", "InterfaceOptionsFrameFix"}, "Interface Options Patch", nil, disabled).width = 2
-    end
-    
-    do
-      local opts = GUI:CreateGroupBox(opts, "Scanner Tooltips")
-      
-      GUI:CreateToggle(opts, {"debugOutput", "tooltip_GameTooltip"}, "GameTooltip", nil, disabled)
-      GUI:CreateNewline(opts)
-      
-      GUI:CreateToggle(opts, {"debugOutput", "tooltip_ItemRefTooltip"}, "ItemRefTooltip", nil, disabled)
-      GUI:CreateNewline(opts)
-      
-      GUI:CreateToggle(opts, {"debugOutput", "tooltip_ShoppingTooltip1"}, "ShoppingTooltip1", nil, disabled)
-      GUI:CreateNewline(opts)
-      
-      GUI:CreateToggle(opts, {"debugOutput", "tooltip_ShoppingTooltip2"}, "ShoppingTooltip2", nil, disabled)
-      GUI:CreateNewline(opts)
-      GUI:CreateExecute(opts, "reload", self.L["Reload UI"], nil, ReloadUI)
     end
   end
   

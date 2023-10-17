@@ -6,13 +6,14 @@ local Addon = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 
 
 
+local EXTENDER_PATTERN = "%s_Ext%d"
+
 
 local MACRO_CHARACTER_LIMIT  = 1023
-local MACRO_LENGTH_TOLERANCE = 20
+local MACRO_LENGTH_TOLERANCE = #("\n/click ZKM") + #EXTENDER_PATTERN + 10
 local MAX_MACRO_LENGTH       = MACRO_CHARACTER_LIMIT - MACRO_LENGTH_TOLERANCE
 
 
-local EXTENDER_PATTERN = "%s_Ext%d"
 
 
 
@@ -39,6 +40,13 @@ local function Bind(parent, n, buffer)
   local name = Addon:GetMacroButtonName(parent, n)
   local button = CreateButton(name)
   button:SetAttribute("macrotext1", buffer)
+  
+  if Addon:GetGlobalOption("debugOutput", "macroBoundToButton") then
+    Addon:Debugf("|cff00ccffMacro bound to %s. Length: %d|r", name, #buffer)
+    for _, line in ipairs({strsplit("\n", buffer)}) do
+      Addon:Debug(line)
+    end
+  end
 end
 
 
@@ -62,9 +70,8 @@ function Addon:BindMacro(parent, macroText)
       Bind(parent, n, AddToBuffer(buffer, "/click " .. self:GetMacroButtonName(parent, n+1)))
       buffer = ""
       n = n + 1
-    else
-      buffer = AddToBuffer(buffer, line)
     end
+    buffer = AddToBuffer(buffer, line)
   end
   
   if #buffer > 0 then
