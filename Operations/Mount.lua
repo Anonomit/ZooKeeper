@@ -134,6 +134,17 @@ local function ModifyMountButton()
         macroText:AddLine(Addon.Line("cancelaura"):Add(options, Addon.spellNames[aura]))
       end
     end
+    
+  elseif Addon.MY_CLASS_NAME == "SHAMAN" then
+    if IsSpellKnown(Addon.spells.GhostWolf) then
+      local condition
+      if Addon:HasValidMounts() then
+        condition = "[novehicleui,combat,outdoors,nomounted]"
+      else
+        condition = "[novehicleui,outdoors,nomounted]"
+      end
+      travelLine:Add(condition, Addon.spellNames.GhostWolf)
+    end
   end
   
   local map = C_Map.GetBestMapForUnit"player"
