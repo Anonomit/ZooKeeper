@@ -23,7 +23,7 @@ local MAX_MACRO_LENGTH       = MACRO_CHARACTER_LIMIT - MACRO_LENGTH_TOLERANCE
 local function Bind(parent, n, buffer)
   local name = Addon:GetMacroButtonName(parent, n)
   local button = Addon:GetMacroButton(name)
-  button:SetAttribute("macrotext1", buffer)
+  button:SetAttribute("macrotext", buffer)
   
   if Addon:GetGlobalOption("debugOutput", "macroBoundToButton") then
     Addon:Debugf("|cff00ccffMacro bound to %s. Length: %d|r", name, #buffer)
