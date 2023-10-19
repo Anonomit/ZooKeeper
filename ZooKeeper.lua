@@ -75,17 +75,6 @@ function Addon:OnEnable()
   self:RegisterChatCommand("critter",   "OldCritterCommand")
   self:RegisterChatCommand("companion", "OldCompanionCommand")
   
-  
-  -- self.addonLoadHooks = {}
-  -- self:RegisterEvent("ADDON_LOADED", function(e, addon)
-  --   if self.addonLoadHooks[addon] then
-  --     self.addonLoadHooks[addon]()
-  --   end
-  -- end)
-  -- self.addonLoadHooks["Blizzard_Collections"] = function()
-  --   self.UI:Init()
-  -- end
-  
   self:RunEnableCallbacks()
 end
 

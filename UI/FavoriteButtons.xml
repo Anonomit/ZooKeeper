@@ -2,15 +2,11 @@
   
   <Script file="FavoriteButtons.lua" />
   
-  <Button name="ZooKeeperFavButton" virtual="true">
+  <Button name="ZooKeeperFavButton" mixin="ZooKeeperFavoriteButtonMixin" virtual="true">
     <Size x="24" y="24" />
     <Scripts>
-      <OnLoad>
-        ZooKeeper.UI.FavoriteButtons.OnLoad(self)
-      </OnLoad>
-      <OnClick>
-        ZooKeeper.UI.FavoriteButtons.OnClick(self)
-      </OnClick>
+      <OnLoad method="OnLoad" />
+      <OnClick method="OnClick" />
     </Scripts>
   </Button>
   

@@ -5,10 +5,8 @@ local ADDON_NAME, Data = ...
 local Addon = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 
 
-Addon.UI = Addon.UI or {}
-
-Addon.UI.FavoriteButtons = {}
-local This = Addon.UI.FavoriteButtons
+ZooKeeperFavoriteButtonMixin = {}
+local This = ZooKeeperFavoriteButtonMixin
 
 
 
@@ -44,7 +42,7 @@ end
 
 
 function This.OnLoad(self)
-  self.Update = function()
+  self.Update = function(self)
     local id = journals[self.journal].GetID()
     if id then
       self:SetShown(self.fav ~= (Addon:GetOption("fav", id) or false))
