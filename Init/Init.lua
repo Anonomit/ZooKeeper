@@ -46,8 +46,6 @@ local random       = random
 
 
 
-Addon.onOptionSetHandlers = {}
-Addon.onCVarSetHandlers   = {}
 
 
 
@@ -273,6 +271,27 @@ do
     return DeepCopy(val, {})
   end
   
+  local onOptionSetHandlers = {}
+  function Addon:RegisterOptionSetHandler(func)
+    tinsert(onOptionSetHandlers, func)
+    return #onOptionSetHandlers
+  end
+  function Addon:UnrgisterOptionSetHandler(id)
+    onOptionSetHandlers[id] = nil
+  end
+  
+  local function OnOptionSet(self, val, ...)
+    if not self:GetDB() then return end -- db hasn't loaded yet
+    self:DebugfIfOutput("optionSet", "Setting %s: %s", strjoin(" > ", ...), tostring(val))
+    for id, func in next, onOptionSetHandlers, nil do
+      if type(func) == "function" then
+        func(self, val, ...)
+      else
+        self[func](self, val, ...)
+      end
+    end
+  end
+  
   local dbTables = {
     {"dbDefault", "Default", true},
     {"db", ""},
@@ -335,7 +354,7 @@ do
             tbl = tbl[key]
           end
           tbl[lastKey] = val
-          Addon.OnOptionSet(Addon, val, dbKey, typeKey, ...)
+          OnOptionSet(Addon, val, dbKey, typeKey, ...)
         end
         
         Addon[ToggleOption] = function(self, ...)
@@ -349,19 +368,137 @@ do
       
     end
   end
-  
-  function Addon:OnOptionSet(val, ...)
-    if not self:GetDB() then return end -- db hasn't loaded yet
-    self:DebugfIfOutput("optionSet", "Setting %s: %s", strjoin(" > ", ...), tostring(val))
-    for funcName, func in next, Addon.onOptionSetHandlers, nil do
-      if type(func) == "function" then
-        func(self, ...)
-      else
-        self[funcName](self, ...)
-      end
+end
+
+
+
+
+
+--  ███████╗██╗   ██╗███████╗███╗   ██╗████████╗███████╗
+--  ██╔════╝██║   ██║██╔════╝████╗  ██║╚══██╔══╝██╔════╝
+--  █████╗  ██║   ██║█████╗  ██╔██╗ ██║   ██║   ███████╗
+--  ██╔══╝  ╚██╗ ██╔╝██╔══╝  ██║╚██╗██║   ██║   ╚════██║
+--  ███████╗ ╚████╔╝ ███████╗██║ ╚████║   ██║   ███████║
+--  ╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚══════╝
+
+do
+  local function Call(func, ...)
+    local args = {...}
+    if type(func) == "function" then
+      Addon:xpcall(function() func(unpack(args)) end)
+    else
+      Addon:xpcall(function() Addon[func](unpack(args)) end)
     end
   end
+  
+  local onEventCallbacks = {}
+  local function OnEvent(event, ...)
+    local t = onEventCallbacks[event]
+    Addon:Assertf(t, "Event %s is registered, but no callbacks were found", event)
+    for i, func in ipairs(t) do
+      Call(func, Addon, event, ...)
+    end
+  end
+  
+  function Addon:RegisterEventCallback(event, func)
+    local t = onEventCallbacks[event] or {}
+    tinsert(t, func)
+    if #t == 1 then
+      onEventCallbacks[event] = t
+      self:RegisterEvent(event, OnEvent)
+    end
+    return #t
+  end
+  function Addon:RegisterSingleEventCallback(event, ...)
+    local id = self:RegisterEventCallback(event, ...)
+    local func = onEventCallbacks[event][id]
+    onEventCallbacks[event][id] = function(...) func(...) self:UnregisterEventCallback(event, id) end
+    return id
+  end
+  function Addon:UnregisterEventCallbacks(event)
+    self:Assertf(onEventCallbacks[event], "Attempted to unregister event %s, but no callbacks were found", event)
+    onEventCallbacks[event] = nil
+    self:UnregisterEvent(event)
+  end
+  function Addon:UnregisterEventCallback(event, id)
+    local t = onEventCallbacks[event] or {}
+    self:Assertf(t[id], "Attempted to unregister callback %s from event %s, but it was not found", id, event)
+    tblRemove(t, id)
+    if #t == 0 then
+      self:UnregisterEventCallbacks(event)
+    end
+  end
+  
+  
+  local onInitializeCallbacks = {}
+  function Addon:RunInitializeCallbacks()
+    for i, func in ipairs(onInitializeCallbacks) do
+      Call(func, Addon)
+    end
+  end
+  function Addon:RegisterInitializeCallback(func)
+    tinsert(onInitializeCallbacks, func)
+    return #onInitializeCallbacks
+  end
+  function Addon:UnregisterInitializeCallbacks()
+    self:Assert(#onInitializeCallbacks > 0, "Attempted to unregister initialize callbacks, but none were found")
+    wipe(onInitializeCallbacks)
+  end
+  function Addon:UnregisterInitializeCallback(id)
+    self:Assertf(onInitializeCallbacks[id], "Attempted to unregister initialize callback %s, but it was not found", id)
+    tblRemove(onInitializeCallbacks, id)
+  end
+  
+  
+  local onEnableCallbacks = {}
+  function Addon:RunEnableCallbacks()
+    for i, func in ipairs(onEnableCallbacks) do
+      Call(func, Addon)
+    end
+  end
+  function Addon:RegisterEnableCallback(func)
+    tinsert(onEnableCallbacks, func)
+    return #onEnableCallbacks
+  end
+  function Addon:UnregisterEnableCallbacks()
+    self:Assert(#onEnableCallbacks > 0, "Attempted to unregister enable callbacks, but none were found")
+    wipe(onEnableCallbacks)
+  end
+  function Addon:UnregisterEnableCallback(id)
+    self:Assertf(onEnableCallbacks[id], "Attempted to unregister enable callback %s, but it was not found", id)
+    tblRemove(onEnableCallbacks, id)
+  end
+  
+  
+  local onAddonLoadCallbacks = {}
+  function Addon:OnAddonLoad(addonName, func)
+    local loaded, finished = IsAddOnLoaded(addonName)
+    if finished then
+      Call(func, self)
+    else
+      local id
+      id = self:RegisterEventCallback("ADDON_LOADED", function(self, event, addon)
+        if addon == addonName then
+          Call(func, self)
+          self:UnregisterEventCallback("ADDON_LOADED", id)
+        end
+      end)
+    end
+  end
+  
+  function Addon:OnCombatEnd(func)
+    if not InCombatLockdown() then
+      Call(func, self)
+    else
+      self:RegisterSingleEventCallback("PLAYER_REGEN_ENABLED", function() Call(func, self) end)
+    end
+  end
+  
+  
 end
+
+
+
 
 
 

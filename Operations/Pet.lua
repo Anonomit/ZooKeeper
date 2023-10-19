@@ -9,17 +9,8 @@ local Addon = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 
 
 
-local ADDON_NAME, Data = ...
-
-
-local Addon = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
-
-
-
-
-
-
-local BUTTON_NAME = "ZKP"
+local MACRO_BUTTON_NAME = "ZKP"
+local SPELL_BUTTON_NAME = MACRO_BUTTON_NAME .. "_SPELL"
 
 
 
@@ -31,34 +22,39 @@ local BUTTON_NAME = "ZKP"
 
 
 
-
-
-
-
-local dismountQueued = false
-
-function Addon:Summon()
+local function Summon()
+  if InCombatLockdown() then return end
   
-  if not self:HasValidCritters() or self:HasSummonedValidCritter() then
-    C_PetJournal.DismissSummonedPet(self:GetSummonedCritter())
-  else
-    -- if GetUnitSpeed"player" ~= 0 then return end
-    C_PetJournal.SummonPetByGUID(self:SelectCritter())
+  local button = Addon:GetSpellButton(SPELL_BUTTON_NAME)
+  button:SetAttribute("spell")
+  
+  local id
+  
+  if not Addon:HasValidCritters() or Addon:HasSummonedValidCritter() then
+    id = Addon:GetSummonedCritter()
+  elseif Addon:HasValidCritters() then
+    id = Addon:SelectCritter()
+  end
+  
+  if id then
+    local name = select(8, C_PetJournal.GetPetInfoByPetID(id))
+    
+    button:SetAttribute("spell", name)
+    return
   end
 end
 
 
 
-local macroInitialized = false
 
-local function ModifyCritterButton()
+local function ModifyButton(init)
   if InCombatLockdown() then return end
-  if macroInitialized and not Addon:DoesPetMacroNeedUpdate() then return end
+  if not init and not Addon:DoesPetMacroNeedUpdate() then return end
   
   local macroText = Addon.MacroText()
   
   
-  macroText:AddLine("/run " .. ADDON_NAME .. ":Summon()")
+  macroText:AddLine(Addon.Line("click", SPELL_BUTTON_NAME))
   
   
   
@@ -68,27 +64,22 @@ local function ModifyCritterButton()
       Addon:Debug(line)
     end
   end
-  macroText:Apply(BUTTON_NAME)
+  macroText:Apply(MACRO_BUTTON_NAME)
 end
 
 
 
-function Addon:InitCritterButton()
-  local mountButton = CreateFrame("Button", BUTTON_NAME, UIParent, "SecureActionButtonTemplate")
-  mountButton:SetAttribute("type1", "macro")
-  mountButton:SetScript("PreClick",  ModifyCritterButton)
-  -- mountButton:SetScript("PostClick", ModifyCritterButton)
-  mountButton:SetAttribute("macrotext1", "/click " .. self:GetMacroButtonName(BUTTON_NAME, n))
-  ModifyCritterButton()
-  macroInitialized = true
+
+
+
+Addon:RegisterEnableCallback(function(self)
+  self:GetSpellButton(SPELL_BUTTON_NAME):SetScript("PreClick", Summon)
   
-  -- mountButton = CreateFrame("Button", "ZKM", UIParent, "SecureActionButtonTemplate")
-  -- mountButton:SetAttribute("type1", "macro")
-  -- mountButton:SetScript("PreClick",  ModifyCritterButton)
-  -- -- mountButton:SetScript("PostClick", ModifyCritterButton)
-  -- ModifyCritterButton()
-end
-
-
-
+  self:GetMacroButton(MACRO_BUTTON_NAME):SetScript("PreClick", ModifyButton)
+  
+  Addon:OnCombatEnd(function(self)
+    self:GetMacroButton(MACRO_BUTTON_NAME):SetAttribute("macrotext",  "/click " .. self:GetMacroButtonName(MACRO_BUTTON_NAME, n))
+    ModifyButton(true)
+  end)
+end)
 

@@ -19,7 +19,9 @@ end
 
 
 
-local critterIndex             = 0
+local critterIndex               = 0
+local allCritters                = {}
+local allCrittersNeedsRefresh    = true
 local idealCritters              = {}
 local idealCrittersNeedsRefresh  = true
 local usableCritters             = {}
@@ -30,6 +32,23 @@ local usableCrittersNeedsRefresh = true
 
 
 
+
+local function RefreshAllCritters()
+  wipe(allCritters)
+  
+  local count = 0
+  for i = 1, C_PetJournal.GetNumPets() do
+    local petID, speciesID, owned, customName, level, favorite, isRevoked, speciesName, icon, petType, companionID, tooltip, description, isWild, canBattle, isTradeable, isUnique, obtainable = C_PetJournal.GetPetInfoByIndex(i)
+    if petID then
+      local isSummonable, error, errorText = C_PetJournal.GetPetSummonInfo(petID)
+      local active = C_PetJournal.IsCurrentlySummoned(petID)
+      allCritters[petID] = {name = speciesName, active = active}
+      count = count + 1
+    end
+  end
+  
+  allCrittersNeedsRefresh = false
+end
 
 
 
@@ -49,9 +68,10 @@ local function RefreshUsableCritters()
     end
   end
   
-  Addon:DebugfIfOutput("usableSelected", "Usable pets updated: %d found%s", count, table.concat(Addon:Map(Addon:Squish(usableCritters), function(v, k) return format("\n%d: %s", k, v.name) end), ""))
+  Addon:DebugfIfOutput("usableSelected", "Usable critters updated: %d found%s", count, table.concat(Addon:Map(Addon:Squish(usableCritters), function(v, k) return format("\n%d: %s", k, v.name) end), ""))
   
   usableCrittersNeedsRefresh = false
+  RefreshAllCritters()
 end
 local function AttemptRefreshUsableCritters()
   if usableCrittersNeedsRefresh then
@@ -64,11 +84,11 @@ local function RefreshIdealCritters()
   AttemptRefreshUsableCritters()
   wipe(idealCritters)
   
-  local allCritters = {}
-  local favCritters = {}
+  local nonFavCritters = {}
+  local favCritters    = {}
   
   for id in pairs(usableCritters) do
-    tinsert(allCritters, id)
+    tinsert(nonFavCritters, id)
     if Addon:GetOption("fav", id) then
       tinsert(favCritters, id)
     end
@@ -77,10 +97,10 @@ local function RefreshIdealCritters()
   if #favCritters > 0 then
     idealCritters = favCritters
   else
-    idealCritters = allCritters
+    idealCritters = nonFavCritters
   end
   
-  Addon:DebugfIfOutput("idealSelected", "Ideal pets updated: %d found%s", #idealCritters, table.concat(Addon:Map(idealCritters, function(v, k) return format("\n%d: %s", k, usableCritters[v].name) end), ""))
+  Addon:DebugfIfOutput("idealSelected", "Ideal critters updated: %d found%s", #idealCritters, table.concat(Addon:Map(idealCritters, function(v, k) return format("\n%d: %s", k, usableCritters[v].name) end), ""))
   
   Addon:Shuffle(idealCritters)
   idealCrittersNeedsRefresh = false
@@ -98,14 +118,14 @@ end
 
 local function WipeIdealCritters()
   if not idealCrittersNeedsRefresh then
-    Addon:DebugIfOutput("idealReset", "Ideal mounts cleared")
+    Addon:DebugIfOutput("idealReset", "Ideal critters cleared")
     wipe(idealCritters)
     idealCrittersNeedsRefresh = true
   end
 end
 local function WipeUsablePets()
   if not usableCrittersNeedsRefresh then
-    Addon:DebugIfOutput("usableReset", "Usable mounts cleared")
+    Addon:DebugIfOutput("usableReset", "Usable critters cleared")
     wipe(usableCritters)
     usableCrittersNeedsRefresh = true
   end
@@ -138,6 +158,16 @@ function Addon:HasSummonedCritter()
   return self:GetSummonedCritter() and true or false
 end
 
+function Addon:HasSummonedValidCritter()
+  AttemptRefreshUsableCritters()
+  for _, id in ipairs(idealCritters) do
+    if allCritters[id].active then
+      return true
+    end
+  end
+  return false
+end
+
 function Addon:SelectCritter()
   AttemptRefreshIdealCritters()
   local critter = idealCritters[critterIndex+1]
@@ -152,19 +182,24 @@ end
 
 
 
-function Addon:StartCritterTracking()
+Addon:RegisterEnableCallback(function(self)
   hooksecurefunc(C_PetJournal, "SummonPetByGUID", TrackLastCritter)
   
-  self:RegisterEvent("NEW_PET_ADDED", WipeUsablePets)
+  self:RegisterOptionSetHandler(WipeUsablePets)
   
-  -- self:RegisterEvent("ZONE_CHANGED", WipeUsablePets)
-  -- self:RegisterEvent("PLAYER_REGEN_ENABLED", WipeUsablePets)
-end
+  self:RegisterEventCallback("NEW_PET_ADDED",           WipeUsablePets)
+  self:RegisterEventCallback("PET_JOURNAL_LIST_UPDATE", WipeUsablePets)
+  
+  self:RegisterEventCallback("COMPANION_UPDATE", function(self, event, category)
+    if category == "CRITTER" then
+      WipeUsablePets()
+    end
+  end)
+end)
 
 
 
 
-Addon.WipeUsablePets = WipeUsablePets
 
 
 

@@ -240,21 +240,26 @@ function Addon:SelectMount()
 end
 
 
-function Addon:StartMountTracking()
+Addon:RegisterEnableCallback(function(self)
   hooksecurefunc(C_MountJournal, "SummonByID", TrackLastMount)
   
-  self:RegisterEvent("NEW_MOUNT_ADDED", WipeUsableMounts)
-  self:RegisterEvent("ZONE_CHANGED", WipeUsableMounts) -- for zone-specific situations
-  self:RegisterEvent("LEARNED_SPELL_IN_TAB", WipeUsableMounts) -- for when a new spaheshift is learned
+  self:RegisterOptionSetHandler(WipeUsableMounts)
   
+  self:RegisterEventCallback("NEW_MOUNT_ADDED",                 WipeUsableMounts)
+  self:RegisterEventCallback("MOUNT_JOURNAL_USABILITY_CHANGED", WipeUsableMounts)
+  self:RegisterEventCallback("ZONE_CHANGED",                    WipeUsableMounts) -- for zone-specific situations
+  self:RegisterEventCallback("LEARNED_SPELL_IN_TAB",            WipeUsableMounts) -- for when a new spaheshift is learned
   
-  -- self:RegisterEvent("PLAYER_REGEN_ENABLED", WipeUsableMounts)
-end
+  self:RegisterEventCallback("COMPANION_UPDATE", function(self, event, category)
+    if category == "MOUNT" then
+      WipeUsableMounts()
+    end
+  end)
+end)
 
 
 
 
-Addon.WipeUsableMounts = WipeUsableMounts
 
 
 

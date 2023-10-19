@@ -58,6 +58,8 @@ end
 function Addon:OnInitialize()
   self.db        = self.AceDB:New(("%sDB"):format(ADDON_NAME), self:MakeDefaultOptions(), true)
   self.dbDefault = self.AceDB:New({}                         , self:MakeDefaultOptions(), true)
+  
+  self:RunInitializeCallbacks()
 end
 
 function Addon:OnEnable()
@@ -73,22 +75,18 @@ function Addon:OnEnable()
   self:RegisterChatCommand("critter",   "OldCritterCommand")
   self:RegisterChatCommand("companion", "OldCompanionCommand")
   
-  self:StartTracking()
-  self:StartMountTracking()
-  self:StartCritterTracking()
-  self:InitMountButton()
-  self:InitCritterButton()
   
-  self.addonLoadHooks = {}
-  self:RegisterEvent("ADDON_LOADED", function(e, addon)
-    if self.addonLoadHooks[addon] then
-      self.addonLoadHooks[addon]()
-    end
-  end)
-  self.addonLoadHooks["Blizzard_Collections"] = function()
-    self.UI:Init()
-  end
+  -- self.addonLoadHooks = {}
+  -- self:RegisterEvent("ADDON_LOADED", function(e, addon)
+  --   if self.addonLoadHooks[addon] then
+  --     self.addonLoadHooks[addon]()
+  --   end
+  -- end)
+  -- self.addonLoadHooks["Blizzard_Collections"] = function()
+  --   self.UI:Init()
+  -- end
   
+  self:RunEnableCallbacks()
 end
 
 function Addon:OnDisable()

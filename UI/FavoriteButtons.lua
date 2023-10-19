@@ -5,6 +5,7 @@ local ADDON_NAME, Data = ...
 local Addon = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 
 
+Addon.UI = Addon.UI or {}
 
 Addon.UI.FavoriteButtons = {}
 local This = Addon.UI.FavoriteButtons
@@ -39,15 +40,6 @@ local function CreateButtons()
 end
 
 
-function This:Init()
-  local favoriteButtons = CreateButtons()
-  
-  function This:UpdateAll()
-    Addon:Map(favoriteButtons, function(v) return v:Update() end)
-  end
-  
-  hooksecurefunc("MountJournal_SetSelected", function() self:UpdateAll() end)
-end
 
 
 
@@ -72,4 +64,14 @@ function This.OnClick(self)
 end
 
 
+
+Addon:OnAddonLoad("Blizzard_Collections", function(self)
+  local favoriteButtons = CreateButtons()
+  
+  function This:UpdateAll()
+    Addon:Map(favoriteButtons, function(v) return v:Update() end)
+  end
+  
+  hooksecurefunc("MountJournal_SetSelected", function() This:UpdateAll() end)
+end)
 

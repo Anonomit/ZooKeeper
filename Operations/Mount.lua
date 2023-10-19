@@ -9,7 +9,8 @@ local Addon = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 
 
 
-local BUTTON_NAME = "ZKM"
+local MACRO_BUTTON_NAME = "ZKM"
+local SPELL_BUTTON_NAME = MACRO_BUTTON_NAME .. "_SPELL"
 
 
 
@@ -58,9 +59,11 @@ local function DismountIfQueued()
   dismountQueued = false
 end
 
-function Addon:Mount()
+local function Mount()
   if InCombatLockdown() then return end
-  if Addon.shapeshiftFormIDs[GetShapeshiftFormID() or 0] then return end -- mounting through lua doesn't cancel shapeshift forms
+  
+  local button = Addon:GetSpellButton(SPELL_BUTTON_NAME)
+  button:SetAttribute("spell")
   
   -- Stop using a normal mount once I have the mount item in Oculus
   if C_Map.GetBestMapForUnit"player" == Addon.zones.Oculus then
@@ -72,12 +75,18 @@ function Addon:Mount()
   end
   
   
-  if self:IsRidingMount() then
+  if Addon:IsRidingMount() then
     QueueDismount()
   end
-  if self:HasValidMounts() and not self:IsRidingIdealMount() then
+  if Addon:HasValidMounts() and not Addon:IsRidingIdealMount() then
     if GetUnitSpeed"player" ~= 0 then return end
-    C_MountJournal.SummonByID(self:SelectMount())
+    
+    local mountID = Addon:SelectMount()
+    local _, spellID = C_MountJournal.GetMountInfoByID(mountID)
+    local name = Addon.spellNames[spellID]
+    
+    button:SetAttribute("spell", name)
+    return
   end
 end
 
@@ -89,11 +98,12 @@ end
 
 
 
-local macroInitialized = false
 
-local function ModifyMountButton()
+
+
+local function ModifyButton(init)
   if InCombatLockdown() then return end
-  if macroInitialized and not Addon:DoesMountMacroNeedUpdate() then return end
+  if not init and not Addon:DoesMountMacroNeedUpdate() then return end
   
   local macroText = Addon.MacroText()
   
@@ -108,7 +118,7 @@ local function ModifyMountButton()
       options = options .. condition
     end
     if IsSpellKnown(Addon.spells.TravelForm) then
-      local condition = "[novehicleui,outdoors,noflyable,noswimming,nomounted]"
+      local condition = "[novehicleui,outdoors,noflyable,noswimming,nomounted][novehicleui,outdoors,flyable,combat,noswimming,nomounted]"
       travelLine:Add(condition, Addon.spellNames.TravelForm)
       options = options .. condition
     end
@@ -131,7 +141,7 @@ local function ModifyMountButton()
     
     if travelLine:IsComplete() then
       for aura in pairs(Addon.spellsByCategory.druidForms.nonMounts) do
-        macroText:AddLine(Addon.Line("cancelaura"):Add(options, Addon.spellNames[aura]))
+        -- macroText:AddLine(Addon.Line("cancelaura"):Add(options, Addon.spellNames[aura]))
       end
     end
     
@@ -151,7 +161,7 @@ local function ModifyMountButton()
     
     if travelLine:IsComplete() then
       for aura in pairs(Addon.spellsByCategory.shamanForms) do
-        macroText:AddLine(Addon.Line("cancelaura"):Add(options, Addon.spellNames[aura]))
+        -- macroText:AddLine(Addon.Line("cancelaura"):Add(options, Addon.spellNames[aura]))
       end
     end
   end
@@ -166,7 +176,7 @@ local function ModifyMountButton()
     macroText:AddLine"/run VehicleExit()"
   end
   
-  macroText:AddLine("/run " .. ADDON_NAME .. ":Mount()")
+  macroText:AddLine(Addon.Line("click", SPELL_BUTTON_NAME))
   
   
   if travelLine:IsComplete() then
@@ -183,21 +193,25 @@ local function ModifyMountButton()
       Addon:Debug(line)
     end
   end
-  macroText:Apply(BUTTON_NAME)
+  macroText:Apply(MACRO_BUTTON_NAME)
 end
 
 
 
-function Addon:InitMountButton()
-  local mountButton = CreateFrame("Button", BUTTON_NAME, UIParent, "SecureActionButtonTemplate")
-  mountButton:SetAttribute("type1", "macro")
-  mountButton:SetScript("PreClick",  ModifyMountButton)
-  -- mountButton:SetScript("PostClick", ModifyMountButton)
-  mountButton:SetAttribute("macrotext1", "/click " .. self:GetMacroButtonName(BUTTON_NAME, n))
-  ModifyMountButton()
-  macroInitialized = true
-end
 
+
+
+
+Addon:RegisterEnableCallback(function(self)
+  self:GetSpellButton(SPELL_BUTTON_NAME):SetScript("PreClick", Mount)
+  
+  self:GetMacroButton(MACRO_BUTTON_NAME):SetScript("PreClick", ModifyButton)
+  
+  Addon:OnCombatEnd(function(self)
+    self:GetMacroButton(MACRO_BUTTON_NAME):SetAttribute("macrotext",  "/click " .. self:GetMacroButtonName(MACRO_BUTTON_NAME, n))
+    ModifyButton(true)
+  end)
+end)
 
 
 

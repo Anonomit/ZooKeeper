@@ -127,10 +127,10 @@ do
     [30] = false, -- Stealth
     
     -- Shaman
-    [16] = nil, -- Ghost Wolf
+    [16] = true, -- Ghost Wolf
     
     -- Warlock
-    [22] = nil, -- Metamorphosis
+    [22] = true, -- Metamorphosis
     
     -- Warrior
     [17] = false, -- Battle Stance
@@ -174,7 +174,7 @@ do
   end
   Flatten(Addon.spellsByCategory)
   
-  Addon.spellNames = setmetatable({}, {__index = function(self, k) self[k] = GetSpellInfo(Addon.spells[k]) or "?" return self[k] end})
+  Addon.spellNames = setmetatable({}, {__index = function(self, k) self[k] = GetSpellInfo(Addon.spells[k] or k) or "?" return self[k] end})
   
   for name in pairs(Addon.spells) do
     nop(Addon.spellNames[name])
@@ -656,10 +656,6 @@ do
   -- collections log update has made mounts depend on riding skill. 410 speed mounts appear to be not affected
   for id, data in pairs(Addon.mounts) do
     local groundSpeeds, flightSpeeds, swimSpeeds = data[4], data[5], data[6]
-    
-    if id == 61451 then
-      print(flightSpeeds)
-    end
     
     if flightSpeeds == 150 then
       flightSpeeds = {150, 280}

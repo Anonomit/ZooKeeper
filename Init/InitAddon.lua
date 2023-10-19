@@ -8,6 +8,34 @@ ZooKeeper   = Addon
 
 
 
+--  ██████╗ ██╗   ██╗████████╗████████╗ ██████╗ ███╗   ██╗███████╗
+--  ██╔══██╗██║   ██║╚══██╔══╝╚══██╔══╝██╔═══██╗████╗  ██║██╔════╝
+--  ██████╔╝██║   ██║   ██║      ██║   ██║   ██║██╔██╗ ██║███████╗
+--  ██╔══██╗██║   ██║   ██║      ██║   ██║   ██║██║╚██╗██║╚════██║
+--  ██████╔╝╚██████╔╝   ██║      ██║   ╚██████╔╝██║ ╚████║███████║
+--  ╚═════╝  ╚═════╝    ╚═╝      ╚═╝    ╚═════╝ ╚═╝  ╚═══╝╚══════╝
+
+do
+  local function GetButton(name, typeAttribute)
+    if not _G[name] then
+      CreateFrame("Button", name, UIParent, "SecureActionButtonTemplate"):SetAttribute("type", typeAttribute)
+    end
+    return _G[name]
+  end
+  
+  function Addon:GetMacroButton(name)
+    return GetButton(name, "macro")
+  end
+  function Addon:GetSpellButton(name)
+    return GetButton(name, "spell")
+  end
+end
+
+
+
+
+
+
 --  ███╗   ███╗ ██████╗ ██╗   ██╗███╗   ██╗████████╗███████╗
 --  ████╗ ████║██╔═══██╗██║   ██║████╗  ██║╚══██╔══╝██╔════╝
 --  ██╔████╔██║██║   ██║██║   ██║██╔██╗ ██║   ██║   ███████╗
@@ -172,6 +200,9 @@ do
     return not reagent or GetItemCount(reagent) > 0
   end
 end
+
+
+
 
 
 

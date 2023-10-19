@@ -20,25 +20,9 @@ local MAX_MACRO_LENGTH       = MACRO_CHARACTER_LIMIT - MACRO_LENGTH_TOLERANCE
 
 
 
-
-
-
-
-
-
-
-local function CreateButton(name)
-  if not _G[name] then
-    mountButton = CreateFrame("Button", name, UIParent, "SecureActionButtonTemplate")
-    mountButton:SetAttribute("type1", "macro")
-  end
-  return _G[name]
-end
-
-
 local function Bind(parent, n, buffer)
   local name = Addon:GetMacroButtonName(parent, n)
-  local button = CreateButton(name)
+  local button = Addon:GetMacroButton(name)
   button:SetAttribute("macrotext1", buffer)
   
   if Addon:GetGlobalOption("debugOutput", "macroBoundToButton") then

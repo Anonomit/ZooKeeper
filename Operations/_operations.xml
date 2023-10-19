@@ -5,11 +5,9 @@
   <Script file="Macro.lua"/>
   <Script file="MacroExtender.lua"/>
   
-  <Script file="Tracking.lua"/>
-  
-  <Script file="Mount.lua"/>
   <Script file="MountTracking.lua"/>
+  <Script file="Mount.lua"/>
   
-  <Script file="Pet.lua"/>
   <Script file="PetTracking.lua"/>
+  <Script file="Pet.lua"/>
 </Ui>
