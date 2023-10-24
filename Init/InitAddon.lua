@@ -8,6 +8,33 @@ ZooKeeper   = Addon
 
 
 
+--  ██╗   ██╗██╗    ███████╗██████╗ ██████╗  ██████╗ ██████╗ ███████╗
+--  ██║   ██║██║    ██╔════╝██╔══██╗██╔══██╗██╔═══██╗██╔══██╗██╔════╝
+--  ██║   ██║██║    █████╗  ██████╔╝██████╔╝██║   ██║██████╔╝███████╗
+--  ██║   ██║██║    ██╔══╝  ██╔══██╗██╔══██╗██║   ██║██╔══██╗╚════██║
+--  ╚██████╔╝██║    ███████╗██║  ██║██║  ██║╚██████╔╝██║  ██║███████║
+--   ╚═════╝ ╚═╝    ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝
+
+do
+  function Addon:BlockUIErrors()
+    self:xpcall(function()
+      if not _G.ErrorFilter then -- ErrorFilter causes the event to be delayed
+        UIErrorsFrame:UnregisterEvent"UI_ERROR_MESSAGE"
+      end
+    end)
+  end
+  function Addon:AllowUIErrors()
+    self:xpcall(function()
+      if not _G.ErrorFilter then -- ErrorFilter causes the event to be delayed
+        UIErrorsFrame:RegisterEvent"UI_ERROR_MESSAGE"
+      end
+    end)
+  end
+end
+
+
+
+
 --  ██████╗ ██╗   ██╗████████╗████████╗ ██████╗ ███╗   ██╗███████╗
 --  ██╔══██╗██║   ██║╚══██╔══╝╚══██╔══╝██╔═══██╗████╗  ██║██╔════╝
 --  ██████╔╝██║   ██║   ██║      ██║   ██║   ██║██╔██╗ ██║███████╗
@@ -214,6 +241,30 @@ end
 --  ╚══════╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝
 
 do
+  local zones = {
+    [143] = "Oculus",
+    [187] = "Icecrown Citadel",
+    
+    [123] = "Wintergrasp",
+    [125] = "Dalaran",
+    [126] = "Dalaran Underbelly",
+  }
+  
+  local flyableRestrictedZones = Addon:MakeLookupTable{
+    123, -- Wintergrasp
+    125, -- Dalaran
+    126, -- Dalaran Underbelly
+  }
+  
+  function Addon:GetZone()
+    return zones[C_Map.GetBestMapForUnit"player" or 0]
+  end
+  
+  function Addon:GetZoneIsFlyableRestricted()
+    return flyableRestrictedZones[C_Map.GetBestMapForUnit"player" or 0] and true or false
+  end
+  
+  
   function Addon:GetMapID()
     return (select(8, GetInstanceInfo()))
   end

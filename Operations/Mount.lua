@@ -59,14 +59,14 @@ local function DismountIfQueued()
   dismountQueued = false
 end
 
-local function Mount()
+local function Mount(button)
   if InCombatLockdown() then return end
   
-  local button = Addon:GetSpellButton(SPELL_BUTTON_NAME)
-  button:SetAttribute("spell")
+  button:SetAttribute"spell"
+  button.id = nil
   
   -- Stop using a normal mount once I have the mount item in Oculus
-  if C_Map.GetBestMapForUnit"player" == Addon.zones.Oculus then
+  if Addon:GetZone() == "Oculus" then
     for key, id in pairs(Addon.items.Oculus) do
       if GetItemCount(id) > 0 then
         return
@@ -82,11 +82,18 @@ local function Mount()
     if GetUnitSpeed"player" ~= 0 then return end
     
     local mountID = Addon:SelectMount()
+    button.id = mountID
     local _, spellID = C_MountJournal.GetMountInfoByID(mountID)
     local name = Addon.spellNames[spellID]
     
     button:SetAttribute("spell", name)
     return
+  end
+end
+local function PostMount(button)
+  local id = button.id
+  if id then
+    Addon:SetLastMount(id)
   end
 end
 
@@ -100,14 +107,15 @@ end
 
 
 
-
-local function ModifyButton(init)
+local init = true
+local function ModifyButton()
   if InCombatLockdown() then return end
   if not init and not Addon:DoesMountMacroNeedUpdate() then return end
   
   local macroText = Addon.MacroText()
   
-  local travelLine = Addon.Line"use"
+  local travelLine      = Addon.Line"use"
+  local extraTravelLine = Addon.Line"use"
   
   if Addon.MY_CLASS_NAME == "DRUID" then
     local options = ""
@@ -123,8 +131,24 @@ local function ModifyButton(init)
       options = options .. condition
     end
     
+    if Addon:IsFlyableRestricted() then
+      -- if IsSpellKnown(Addon.spells.SwiftFlightForm) then
+      --   local condition = "[novehicleui,form:6]"
+      --   travelLine:Add(condition, Addon.spellNames.SwiftFlightForm)
+      --   options = options .. condition
+      -- elseif IsSpellKnown(Addon.spells.FlightForm) then
+      --   local condition = "[novehicleui,form:6]"
+      --   travelLine:Add(condition, Addon.spellNames.FlightForm)
+      --   options = options .. condition
+      -- end
+      if IsSpellKnown(Addon.spells.TravelForm) then
+        local condition = "[novehicleui,outdoors,flyable,nocombat,noswimming,nomounted]"
+        travelLine:Add(condition, Addon.spellNames.TravelForm)
+        options = options .. condition
+      end
+    end
     if IsSpellKnown(Addon.spells.SwiftFlightForm) then
-      local condition = "[novehicleui,outdoors,flyable,nocombat,noswimming,nomounted]"
+      local condition = "[novehicleui,outdoors,flyable,nocombat,noswimming,nomounted][novehicleui,indoors,form:6][novehicleui,noflyable,form:6]"
       travelLine:Add(condition, Addon.spellNames.SwiftFlightForm)
       options = options .. condition
     elseif IsSpellKnown(Addon.spells.FlightForm) then
@@ -166,21 +190,28 @@ local function ModifyButton(init)
     end
   end
   
-  local map = C_Map.GetBestMapForUnit"player"
-  if map == Addon.zones.IcecrownCitadel then
+  local zone = Addon:GetZone()
+  if zone == "Icecrown Citadel" then
     macroText:AddLine("/use [@cursor]Goblin Rocket Pack")
-  elseif map == Addon.zones.Oculus then
+  elseif zone == "Oculus" then
     for key, id in pairs(Addon.items.Oculus) do
       macroText:AddLine(Addon.Line("use"):Add("item:" .. id))
     end
     macroText:AddLine"/run VehicleExit()"
   end
   
+  if travelLine:IsComplete() then
+    macroText:AddLine(Addon.Line("run", ADDON_NAME .. ":BlockUIErrors()"))
+  end
   macroText:AddLine(Addon.Line("click", SPELL_BUTTON_NAME))
   
   
   if travelLine:IsComplete() then
     macroText:AddLine(travelLine)
+    if extraTravelLine:IsComplete() then
+      macroText:AddLine(extraTravelLine)
+    end
+    macroText:AddLine(Addon.Line("run", ADDON_NAME .. ":AllowUIErrors()"))
   end
   
   macroText:AddLine"/dismount [combat]"
@@ -194,6 +225,8 @@ local function ModifyButton(init)
     end
   end
   macroText:Apply(MACRO_BUTTON_NAME)
+  
+  init = false
 end
 
 
@@ -203,13 +236,14 @@ end
 
 
 Addon:RegisterEnableCallback(function(self)
-  self:GetSpellButton(SPELL_BUTTON_NAME):SetScript("PreClick", Mount)
+  self:GetSpellButton(SPELL_BUTTON_NAME):SetScript("PreClick",  Mount)
+  self:GetSpellButton(SPELL_BUTTON_NAME):SetScript("PostClick", PostMount)
   
   self:GetMacroButton(MACRO_BUTTON_NAME):SetScript("PreClick", ModifyButton)
   
   Addon:OnCombatEnd(function(self)
     self:GetMacroButton(MACRO_BUTTON_NAME):SetAttribute("macrotext",  "/click " .. self:GetMacroButtonName(MACRO_BUTTON_NAME, n))
-    ModifyButton(true)
+    ModifyButton()
   end)
 end)
 

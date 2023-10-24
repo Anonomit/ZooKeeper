@@ -98,21 +98,22 @@ local function MakeDebugOptions(opts, categoryName)
       
       
       for i, data in ipairs{
-        -- {"speed",                    "Desired Speed"},
-        -- {"zoneSpecs",                "Zone Specifications"},
-        {"usableSelected",           "Usable Selected"},
-        {"usableReset",              "Usable Reset"},
-        {"idealSelected",            "Ideal Selected"},
-        {"idealReset",               "Ideal Reset"},
-        {"finalSelectionMade",       "Final Selection Made"},
-        {"mountTypes",               "Mount Types"},
-        {"mountType",                "Selected Mount Type"},
-        {"initialMountPool",         "Initial Mount Pool"},
-        {"candidates",               "Mount Candidates"},
-        -- {"finalMountPool",           "Final Mount Pool"},
-        {"usingFallbackMount",       "Using Fallback Mount"},
-        {"macroTextChanged",         "Macro Text Changed"},
-        {"macroBoundToButton",       "Macro Bound to Button"},
+        {"lastSet",            "Last Set"},
+        {"allSelected",        "All Selected"},
+        {"allReset",           "All Reset"},
+        {"usableSelected",     "Usable Selected"},
+        {"usableReset",        "Usable Reset"},
+        {"idealSelected",      "Ideal Selected"},
+        {"idealReset",         "Ideal Reset"},
+        {"finalSelectionMade", "Final Selection Made"},
+        {"mountTypes",         "Mount Types"},
+        {"mountType",          "Selected Mount Type"},
+        {"initialMountPool",   "Initial Mount Pool"},
+        {"candidates",         "Mount Candidates"},
+        -- {"finalMountPool",  "Final Mount Pool"},
+        {"usingFallbackMount", "Using Fallback Mount"},
+        {"macroTextChanged",   "Macro Text Changed"},
+        {"macroBoundToButton", "Macro Bound to Button"},
       } do
         if i ~= 1 then
           GUI:CreateNewline(opts)

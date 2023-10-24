@@ -11,10 +11,10 @@ local Addon = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 
 
 
-local lastCritterID
-
-local function TrackLastCritter(...)
-  lastCritterID = ...
+local lastID
+function Addon:SetLastCritter(id)
+  Addon:DebugfIfOutput("lastSet", "Last critter is %s", id)
+  lastID = id
 end
 
 
@@ -171,7 +171,7 @@ end
 function Addon:SelectCritter()
   AttemptRefreshIdealCritters()
   local critter = idealCritters[critterIndex+1]
-  if critter == lastCritterID then
+  if critter == lastID then
     critterIndex = (critterIndex+1) % (#idealCritters)
     critter = idealCritters[critterIndex+1]
   end
@@ -183,13 +183,14 @@ end
 
 
 Addon:RegisterEnableCallback(function(self)
-  hooksecurefunc(C_PetJournal, "SummonPetByGUID", TrackLastCritter)
+  hooksecurefunc(C_PetJournal, "SummonPetByGUID", function(id) self:SetLastCritter(id) end)
   
-  self:RegisterOptionSetHandler(WipeUsablePets)
+  self:RegisterOptionSetHandler(WipeIdealPets)
   
   self:RegisterEventCallback("NEW_PET_ADDED",           WipeUsablePets)
   self:RegisterEventCallback("PET_JOURNAL_LIST_UPDATE", WipeUsablePets)
   
+  -- fires for other players too
   self:RegisterEventCallback("COMPANION_UPDATE", function(self, event, category)
     if category == "CRITTER" then
       WipeUsablePets()

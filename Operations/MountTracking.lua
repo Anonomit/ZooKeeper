@@ -6,10 +6,10 @@ local Addon = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 
 
 
-local lastMountID
-
-local function TrackLastMount(...)
-  lastMountID = ...
+local lastID
+function Addon:SetLastMount(id)
+  Addon:DebugfIfOutput("lastSet", "Last mount is %s", id)
+  lastID = id
 end
 
 
@@ -33,11 +33,18 @@ local function RefreshAllMounts()
   local count = 0
   for _, i in ipairs(C_MountJournal.GetMountIDs()) do
     local creatureName, spellID, icon, active, isUsable, sourceType, isFavorite, isFactionSpecific, faction, hideOnChar, isCollected, mountID = C_MountJournal.GetMountInfoByID(i)
-    allMounts[i] = {name = creatureName, spellID = spellID, active = active}
+    allMounts[i] = {name = creatureName, spellID = spellID, active = active, isCollected = isCollected}
     count = count + 1
   end
   
+  Addon:DebugfIfOutput("allSelected", "All mounts updated: %d found", count)
+  
   allMountsNeedsRefresh = false
+end
+local function AttemptRefreshAllMounts()
+  if allMountsNeedsRefresh then
+    RefreshAllMounts()
+  end
 end
 
 
@@ -56,7 +63,7 @@ local function RefreshUsableMounts()
   Addon:DebugfIfOutput("usableSelected", "Usable mounts updated: %d found%s", count, table.concat(Addon:Map(Addon:Squish(usableMounts), function(v, k) return format("\n%d: %s", k, v.name) end), ""))
   
   usableMountsNeedsRefresh = false
-  RefreshAllMounts()
+  AttemptRefreshAllMounts()
 end
 local function AttemptRefreshUsableMounts()
   if usableMountsNeedsRefresh then
@@ -156,15 +163,18 @@ local function RefreshIdealMounts()
     end
   end
   
+  Addon:DebugfIfOutput("idealSelected", "Ideal mounts updated: %d found%s", #idealMounts, table.concat(Addon:Map(idealMounts, function(v, k) return format("\n%d: %s", k, usableMounts[v].name) end), ""))
+  
   if mountType == "fly" and Addon.MY_CLASS_NAME == "DRUID" then
     if IsSpellKnown(Addon.spells.SwiftFlightForm) and fastestSpeed <= 280 then
       wipe(idealMounts)
+      Addon:DebugfIfOutput("idealSelected", "Ideal mounts updated: %d found (using druid form instead)", #idealMounts)
     elseif IsSpellKnown(Addon.spells.FlightForm) and fastestSpeed <= 150 then
       wipe(idealMounts)
+      Addon:DebugfIfOutput("idealSelected", "Ideal mounts updated: %d found (using druid form instead)", #idealMounts)
     end
   end
   
-  Addon:DebugfIfOutput("idealSelected", "Ideal mounts updated: %d found%s", #idealMounts, table.concat(Addon:Map(idealMounts, function(v, k) return format("\n%d: %s", k, usableMounts[v].name) end), ""))
   
   Addon:Shuffle(idealMounts)
   idealMountsNeedsRefresh = false
@@ -195,12 +205,20 @@ local function WipeUsableMounts()
   end
   WipeIdealMounts()
 end
+local function WipeAllMounts()
+  if not allMountsNeedsRefresh then
+    Addon:DebugIfOutput("allReset", "All mounts cleared")
+    wipe(allMounts)
+    allMountsNeedsRefresh = true
+  end
+  WipeUsableMounts()
+end
 
 
 
 
 function Addon:DoesMountMacroNeedUpdate()
-  return idealMountsNeedsRefresh or usableMountsNeedsRefresh
+  return idealMountsNeedsRefresh or usableMountsNeedsRefresh or allMountsNeedsRefresh
 end
 
 function Addon:HasValidMounts()
@@ -231,7 +249,7 @@ end
 function Addon:SelectMount()
   AttemptRefreshIdealMounts()
   local mount = idealMounts[mountIndex+1]
-  if mount == lastMountID then
+  if mount == lastID then
     mountIndex = (mountIndex+1) % (#idealMounts)
     mount = idealMounts[mountIndex+1]
   end
@@ -239,22 +257,43 @@ function Addon:SelectMount()
   return mount
 end
 
+function Addon:IsFlyableRestricted()
+  if not IsFlyableArea() or not self:GetZoneIsFlyableRestricted() then return false end
+  
+  local hasCollectedFlyingMounts = false
+  AttemptRefreshAllMounts()
+  for id, mountData in pairs(allMounts) do
+    local _, typeFlags = Addon:GetMountInfo(mountData.spellID)
+    if mountData.isCollected and bit.band(typeFlags or 0, 0x1) ~= 0 then -- Is flying mount
+      AttemptRefreshUsableMounts()
+      if usableMounts[id] then
+        return false
+      else
+        hasCollectedFlyingMounts = true
+      end
+    end
+  end
+  
+  if hasCollectedFlyingMounts then
+    return true -- some flying mounts are collected but none are usable
+  end
+  return false -- can't check flying mounts usability if they aren't collected, so assume they can be used
+end
+
 
 Addon:RegisterEnableCallback(function(self)
-  hooksecurefunc(C_MountJournal, "SummonByID", TrackLastMount)
+  hooksecurefunc(C_MountJournal, "SummonByID", function(id) self:SetLastMount(id) end)
   
-  self:RegisterOptionSetHandler(WipeUsableMounts)
+  self:RegisterOptionSetHandler(WipeIdealMounts)
   
-  self:RegisterEventCallback("NEW_MOUNT_ADDED",                 WipeUsableMounts)
+  self:RegisterEventCallback("NEW_MOUNT_ADDED",                 WipeAllMounts)
+  self:RegisterEventCallback("PLAYER_MOUNT_DISPLAY_CHANGED",    WipeAllMounts) -- when the player uses a mount
+  
   self:RegisterEventCallback("MOUNT_JOURNAL_USABILITY_CHANGED", WipeUsableMounts)
   self:RegisterEventCallback("ZONE_CHANGED",                    WipeUsableMounts) -- for zone-specific situations
+  self:RegisterEventCallback("ZONE_CHANGED_NEW_AREA",           WipeUsableMounts) -- for zone-specific situations
   self:RegisterEventCallback("LEARNED_SPELL_IN_TAB",            WipeUsableMounts) -- for when a new spaheshift is learned
   
-  self:RegisterEventCallback("COMPANION_UPDATE", function(self, event, category)
-    if category == "MOUNT" then
-      WipeUsableMounts()
-    end
-  end)
 end)
 
 

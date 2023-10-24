@@ -22,11 +22,11 @@ local SPELL_BUTTON_NAME = MACRO_BUTTON_NAME .. "_SPELL"
 
 
 
-local function Summon()
+local function Summon(button)
   if InCombatLockdown() then return end
   
-  local button = Addon:GetSpellButton(SPELL_BUTTON_NAME)
-  button:SetAttribute("spell")
+  button:SetAttribute"spell"
+  button.id = nil
   
   local id
   
@@ -37,17 +37,25 @@ local function Summon()
   end
   
   if id then
+    button.id = id
+    
     local name = select(8, C_PetJournal.GetPetInfoByPetID(id))
     
     button:SetAttribute("spell", name)
     return
   end
 end
+local function PostSummon(button)
+  local id = button.id
+  if id then
+    Addon:SetLastCritter(id)
+  end
+end
 
 
 
-
-local function ModifyButton(init)
+local init = true
+local function ModifyButton()
   if InCombatLockdown() then return end
   if not init and not Addon:DoesPetMacroNeedUpdate() then return end
   
@@ -65,6 +73,8 @@ local function ModifyButton(init)
     end
   end
   macroText:Apply(MACRO_BUTTON_NAME)
+  
+  init = false
 end
 
 
@@ -73,13 +83,14 @@ end
 
 
 Addon:RegisterEnableCallback(function(self)
-  self:GetSpellButton(SPELL_BUTTON_NAME):SetScript("PreClick", Summon)
+  self:GetSpellButton(SPELL_BUTTON_NAME):SetScript("PreClick",  Summon)
+  self:GetSpellButton(SPELL_BUTTON_NAME):SetScript("PostClick", PostSummon)
   
   self:GetMacroButton(MACRO_BUTTON_NAME):SetScript("PreClick", ModifyButton)
   
   Addon:OnCombatEnd(function(self)
     self:GetMacroButton(MACRO_BUTTON_NAME):SetAttribute("macrotext",  "/click " .. self:GetMacroButtonName(MACRO_BUTTON_NAME, n))
-    ModifyButton(true)
+    ModifyButton()
   end)
 end)
 
