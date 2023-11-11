@@ -14,112 +14,125 @@ end
 
 
 
-local mountIndex               = 0
-local allMounts                = {}
-local allMountsNeedsRefresh    = true
-local idealMounts              = {}
-local idealMountsNeedsRefresh  = true
-local usableMounts             = {}
-local usableMountsNeedsRefresh = true
+local optionIndex               = 0
+local allOptions                = {}
+local allOptionsNeedsRefresh    = true
+local idealOptions              = {}
+local idealOptionsNeedsRefresh  = true
+local usableOptions             = {}
+local usableOptionsNeedsRefresh = true
 
 
 
 
 
 
-local function RefreshAllMounts()
-  wipe(allMounts)
+local function RefreshAllOptions()
+  wipe(allOptions)
   
   local count = 0
   for _, i in ipairs(C_MountJournal.GetMountIDs()) do
     local creatureName, spellID, icon, active, isUsable, sourceType, isFavorite, isFactionSpecific, faction, hideOnChar, isCollected, mountID = C_MountJournal.GetMountInfoByID(i)
-    allMounts[i] = {name = creatureName, spellID = spellID, active = active, isCollected = isCollected}
+    allOptions[i] = {name = creatureName, spellID = spellID, active = active, isCollected = isCollected}
     count = count + 1
   end
   
   Addon:DebugfIfOutput("allSelected", "All mounts updated: %d found", count)
   
-  allMountsNeedsRefresh = false
+  allOptionsNeedsRefresh = false
 end
-local function AttemptRefreshAllMounts()
-  if allMountsNeedsRefresh then
-    RefreshAllMounts()
+local function AttemptRefreshAllOptions()
+  if allOptionsNeedsRefresh then
+    RefreshAllOptions()
   end
 end
 
 
-local function RefreshUsableMounts()
-  wipe(usableMounts)
+local function RefreshUsableOptions()
+  wipe(usableOptions)
   
   local count = 0
   for _, i in ipairs(C_MountJournal.GetMountIDs()) do
     local creatureName, spellID, icon, active, isUsable, sourceType, isFavorite, isFactionSpecific, faction, hideOnChar, isCollected, mountID = C_MountJournal.GetMountInfoByID(i)
     if isUsable then
-      usableMounts[i] = {name = creatureName, spellID = spellID, active = active}
+      usableOptions[i] = {name = creatureName, spellID = spellID, active = active}
       count = count + 1
     end
   end
   
-  Addon:DebugfIfOutput("usableSelected", "Usable mounts updated: %d found%s", count, table.concat(Addon:Map(Addon:Squish(usableMounts), function(v, k) return format("\n%d: %s", k, v.name) end), ""))
+  Addon:DebugfIfOutput("usableSelected", "Usable mounts updated: %d found%s", count, table.concat(Addon:Map(Addon:Squish(usableOptions), function(v, k) return format("\n%d: %s", k, v.name) end), ""))
   
-  usableMountsNeedsRefresh = false
-  AttemptRefreshAllMounts()
+  usableOptionsNeedsRefresh = false
+  AttemptRefreshAllOptions()
 end
-local function AttemptRefreshUsableMounts()
-  if usableMountsNeedsRefresh then
-    RefreshUsableMounts()
+local function AttemptRefreshUsableOptions()
+  if usableOptionsNeedsRefresh then
+    RefreshUsableOptions()
   end
 end
 
 
 local function InsertMount(id, mounts, mountType)
-  tinsert(mounts[mountType], id)
+  if not Addon:GetOption("behavior", "onlyUseFavs") then
+    tinsert(mounts[mountType], id)
+  end
   if Addon:GetOption("fav", id) then
     tinsert(mounts.fav[mountType], id)
   end
-  Addon:DebugIfOutput("mountTypes", "%s can %s", usableMounts[id].name, mountType)
+  Addon:DebugfIfOutput("mountTypes", "%s can %s", usableOptions[id].name, mountType)
 end
 local function FilterToFastestMounts(candidates, mountType)
-  wipe(idealMounts)
-
+  if mountType == "fallback" then
+    mountType = "ground"
+  end
+  wipe(idealOptions)
+  
   if Addon:GetGlobalOption("debugOutput", "candidates") then
     Addon:Debugf("Candidates: %d", #candidates)
-    for _, spellID in ipairs(candidates) do
-      Addon:Debugf("  %d", spellID)
+    for _, i in ipairs(candidates) do
+      Addon:Debugf("  %s", usableOptions[i].name)
     end
   end
   
   if #candidates == 0 then
     return
   end
-
+  
   -- find the fastest mount
   local speedFilter = 0
   for _, i in ipairs(candidates) do
-    local speed = Addon:GetMountFastestSpeed(usableMounts[i].spellID, mountType)
+    local speed = Addon:GetMountFastestSpeed(usableOptions[i].spellID, mountType)
     if not speedFilter or speed > speedFilter then
       speedFilter = speed
     end
   end
   
   if speedFilter then
-    idealMounts = Addon:Filter(candidates, function(v)
-      return Addon:GetMountFastestSpeed(usableMounts[v].spellID, mountType) == speedFilter
+    idealOptions = Addon:Filter(candidates, function(v)
+      return Addon:GetMountFastestSpeed(usableOptions[v].spellID, mountType) == speedFilter
     end)
   end
   
   return speedFilter
 end
-local function RefreshIdealMounts()
-  AttemptRefreshUsableMounts()
-
-  local mounts = {fly = {}, ground = {}, swim = {}, fav = {fly = {}, ground = {}, swim = {}}}
-
+local function RefreshIdealOptions()
+  AttemptRefreshUsableOptions()
+  local template = {
+    "fly",      -- mount is capable of flying
+    "ground",   -- mount is ground-only
+    "swim",     -- mount is usable in water
+    "fallback", -- mount is usable in non-flying ground areas
+  }
+  local mounts   = Addon:MakeLookupTable(template, function() return {} end)
+  mounts.fav     = Addon:MakeLookupTable(template, function() return {} end)
+  
   local flyable = false
-  for id, mountData in pairs(usableMounts) do
+  for id, mountData in pairs(usableOptions) do
     local _, typeFlags, mountFlags, flightSpeeds, groundSpeeds, swimSpeeds = Addon:GetMountInfo(mountData.spellID)
     
-    if bit.band(typeFlags or 0, 0x5) == 0 then -- Mount is usable on ground
+    InsertMount(id, mounts, "fallback")
+    
+    if bit.band(typeFlags or 0, 0x5) == 0 then -- Mount is not able to fly
       InsertMount(id, mounts, "ground")
     end
     
@@ -131,20 +144,25 @@ local function RefreshIdealMounts()
       InsertMount(id, mounts, "fly")
       flyable = IsFlyableArea()
     end
+    
   end
-
-  local mountType = IsSwimming() and "swim" or flyable and "fly" or "ground"
   
-  Addon:DebugIfOutput("mountType", "Mount Type: %s", mountType)
+  local mountType = IsSwimming() and "swim" or flyable and "fly" or Addon:GetOption("behavior", "preferNonFlyingMountsOnGround") and "ground" or "fallback"
+  -- fall back to ground mount if no flyers are available. should only be possible if non-favorite mounts are disallowed
+  if mountType == "fly" and #mounts.fav[mountType] == 0 and Addon:GetOption("behavior", "onlyUseFavs") then
+    mountType = Addon:GetOption("behavior", "preferNonFlyingMountsOnGround") and "ground" or "fallback"
+  end
+  
+  Addon:DebugfIfOutput("mountType", "Mount Type: %s", mountType)
   
   if Addon:GetGlobalOption("debugOutput", "initialMountPool") then
     Addon:Debug("Initial mount pool:")
     for j, cats in ipairs{mounts.fav, mounts} do
-      for _, cat in ipairs{"fly", "ground", "swim"} do
+      for _, cat in ipairs{"fly", "ground", "swim", "fallback"} do
         local lis = cats[cat]
         Addon:Debugf("  %s%s:", j == 1 and "fav " or "", cat)
         for _, i in ipairs(lis) do
-          Addon:Debug("    " .. usableMounts[i].name)
+          Addon:Debug("    " .. usableOptions[i].name)
         end
       end
     end
@@ -152,37 +170,37 @@ local function RefreshIdealMounts()
   
   local fastestSpeed = FilterToFastestMounts(#mounts.fav[mountType] > 0 and mounts.fav[mountType] or mounts[mountType], mountType)
   
-  -- if mountType is "swim" or "fly" and couldn't find a proper mount, then use fallback "ground"
-  if (#idealMounts == 0 or fastestSpeed == 0) and mountType ~= "ground" then
-    if useFallback then
-      Addon:DebugIfOutput("usingFallbackMount", "Falling back to ground mount. Valid Mounts: %d, Fastest Speed: %s", not idealMounts and 0 or #idealMounts, tostring(fastestSpeed))
-      mountType = "ground"
+  -- if mountType is not fallback or swim and couldn't find a useful (speed>0) mount, then use a fallback
+  if (#idealOptions == 0 or fastestSpeed == 0) and mountType ~= "fallback" then
+    if not Addon:GetOption("behavior", "allowSlowMounts") then
+      wipe(idealOptions)
+    elseif mountType ~= "swim" then
+      Addon:DebugfIfOutput("usingFallbackMount", "Falling back to ground mount. Valid Mounts: %d, Fastest Speed: %s", not idealOptions and 0 or #idealOptions, tostring(fastestSpeed))
+      mountType = "fallback"
       fastestSpeed = FilterToFastestMounts(#mounts.fav[mountType] > 0 and mounts.fav[mountType] or mounts[mountType], mountType)
-    else
-      wipe(idealMounts)
     end
   end
   
-  Addon:DebugfIfOutput("idealSelected", "Ideal mounts updated: %d found%s", #idealMounts, table.concat(Addon:Map(idealMounts, function(v, k) return format("\n%d: %s", k, usableMounts[v].name) end), ""))
+  Addon:DebugfIfOutput("idealSelected", "Ideal mounts updated: %d found%s", #idealOptions, table.concat(Addon:Map(idealOptions, function(v, k) return format("\n%d: %s", k, usableOptions[v].name) end), ""))
   
   if mountType == "fly" and Addon.MY_CLASS_NAME == "DRUID" then
-    if IsSpellKnown(Addon.spells.SwiftFlightForm) and fastestSpeed <= 280 then
-      wipe(idealMounts)
-      Addon:DebugfIfOutput("idealSelected", "Ideal mounts updated: %d found (using druid form instead)", #idealMounts)
-    elseif IsSpellKnown(Addon.spells.FlightForm) and fastestSpeed <= 150 then
-      wipe(idealMounts)
-      Addon:DebugfIfOutput("idealSelected", "Ideal mounts updated: %d found (using druid form instead)", #idealMounts)
+    if Addon:CanUseForm"SwiftFlightForm" and (fastestSpeed <= 280 or Addon:GetOption("class", "DRUID", "alwaysPreferFlightForm")) then
+      wipe(idealOptions)
+      Addon:DebugfIfOutput("idealSelected", "Ideal mounts updated: %d found (using druid form instead)", #idealOptions)
+    elseif Addon:CanUseForm"FlightForm" and (fastestSpeed <= 150 or Addon:GetOption("class", "DRUID", "alwaysPreferFlightForm")) then
+      wipe(idealOptions)
+      Addon:DebugfIfOutput("idealSelected", "Ideal mounts updated: %d found (using druid form instead)", #idealOptions)
     end
   end
   
   
-  Addon:Shuffle(idealMounts)
-  idealMountsNeedsRefresh = false
-  mountIndex = 0
+  Addon:Shuffle(idealOptions)
+  idealOptionsNeedsRefresh = false
+  optionIndex = 0
 end
-local function AttemptRefreshIdealMounts()
-  if idealMountsNeedsRefresh then
-    RefreshIdealMounts()
+local function AttemptRefreshIdealOptions()
+  if idealOptionsNeedsRefresh then
+    RefreshIdealOptions()
   end
 end
 
@@ -190,45 +208,45 @@ end
 
 
 
-local function WipeIdealMounts()
-  if not idealMountsNeedsRefresh then
+local function WipeIdealOptions()
+  if not idealOptionsNeedsRefresh then
     Addon:DebugIfOutput("idealReset", "Ideal mounts cleared")
-    wipe(idealMounts)
-    idealMountsNeedsRefresh = true
+    wipe(idealOptions)
+    idealOptionsNeedsRefresh = true
   end
 end
-local function WipeUsableMounts()
-  if not usableMountsNeedsRefresh then
+local function WipeUsableOptions()
+  if not usableOptionsNeedsRefresh then
     Addon:DebugIfOutput("usableReset", "Usable mounts cleared")
-    wipe(usableMounts)
-    usableMountsNeedsRefresh = true
+    wipe(usableOptions)
+    usableOptionsNeedsRefresh = true
   end
-  WipeIdealMounts()
+  WipeIdealOptions()
 end
-local function WipeAllMounts()
-  if not allMountsNeedsRefresh then
+local function WipeAllOptions()
+  if not allOptionsNeedsRefresh then
     Addon:DebugIfOutput("allReset", "All mounts cleared")
-    wipe(allMounts)
-    allMountsNeedsRefresh = true
+    wipe(allOptions)
+    allOptionsNeedsRefresh = true
   end
-  WipeUsableMounts()
+  WipeUsableOptions()
 end
 
 
 
 
 function Addon:DoesMountMacroNeedUpdate()
-  return idealMountsNeedsRefresh or usableMountsNeedsRefresh or allMountsNeedsRefresh
+  return idealOptionsNeedsRefresh or usableOptionsNeedsRefresh or allOptionsNeedsRefresh
 end
 
 function Addon:HasValidMounts()
-  AttemptRefreshIdealMounts()
-  return #idealMounts > 0
+  AttemptRefreshIdealOptions()
+  return #idealOptions > 0
 end
 
 function Addon:IsRidingMount()
-  AttemptRefreshUsableMounts()
-  for id, data in pairs(allMounts) do
+  AttemptRefreshUsableOptions()
+  for id, data in pairs(allOptions) do
     if data.active then
       return true
     end
@@ -237,9 +255,9 @@ function Addon:IsRidingMount()
 end
 
 function Addon:IsRidingIdealMount()
-  AttemptRefreshIdealMounts()
-  for i, id in ipairs(idealMounts) do
-    if allMounts[id].active then
+  AttemptRefreshIdealOptions()
+  for i, id in ipairs(idealOptions) do
+    if allOptions[id].active then
       return true
     end
   end
@@ -247,26 +265,31 @@ function Addon:IsRidingIdealMount()
 end
 
 function Addon:SelectMount()
-  AttemptRefreshIdealMounts()
-  local mount = idealMounts[mountIndex+1]
-  if mount == lastID then
-    mountIndex = (mountIndex+1) % (#idealMounts)
-    mount = idealMounts[mountIndex+1]
+  AttemptRefreshIdealOptions()
+  local id
+  if self:GetOption("behavior", "useTrueRandomization") then
+    id = self:Random(idealOptions)
+  else
+    id = idealOptions[optionIndex+1]
+    if id == lastID then
+      optionIndex = (optionIndex+1) % (#idealOptions)
+      id = idealOptions[optionIndex+1]
+    end
   end
-  self:DebugfIfOutput("finalSelectionMade", "Mount selected: %s (%d)", usableMounts[mount].name, mount)
-  return mount
+  self:DebugfIfOutput("finalSelectionMade", "Mount selected: %s (%d)", usableOptions[id].name, id)
+  return id
 end
 
 function Addon:IsFlyableRestricted()
   if not IsFlyableArea() or not self:GetZoneIsFlyableRestricted() then return false end
   
   local hasCollectedFlyingMounts = false
-  AttemptRefreshAllMounts()
-  for id, mountData in pairs(allMounts) do
+  AttemptRefreshAllOptions()
+  for id, mountData in pairs(allOptions) do
     local _, typeFlags = Addon:GetMountInfo(mountData.spellID)
     if mountData.isCollected and bit.band(typeFlags or 0, 0x1) ~= 0 then -- Is flying mount
-      AttemptRefreshUsableMounts()
-      if usableMounts[id] then
+      AttemptRefreshUsableOptions()
+      if usableOptions[id] then
         return false
       else
         hasCollectedFlyingMounts = true
@@ -284,16 +307,16 @@ end
 Addon:RegisterEnableCallback(function(self)
   hooksecurefunc(C_MountJournal, "SummonByID", function(id) self:SetLastMount(id) end)
   
-  self:RegisterOptionSetHandler(WipeIdealMounts)
+  self:RegisterOptionSetHandler(WipeIdealOptions)
   
-  self:RegisterEventCallback("NEW_MOUNT_ADDED",                 WipeAllMounts)
-  self:RegisterEventCallback("PLAYER_MOUNT_DISPLAY_CHANGED",    WipeAllMounts) -- when the player uses a mount
+  self:RegisterEventCallback("NEW_MOUNT_ADDED",                 WipeAllOptions)
+  self:RegisterEventCallback("PLAYER_MOUNT_DISPLAY_CHANGED",    WipeAllOptions) -- when the player uses a mount
   
-  self:RegisterEventCallback("MOUNT_JOURNAL_USABILITY_CHANGED", WipeUsableMounts)
-  self:RegisterEventCallback("ZONE_CHANGED",                    WipeUsableMounts) -- for zone-specific situations
-  self:RegisterEventCallback("ZONE_CHANGED_NEW_AREA",           WipeUsableMounts) -- for zone-specific situations
-  self:RegisterEventCallback("LEARNED_SPELL_IN_TAB",            WipeUsableMounts) -- for when a new spaheshift is learned
+  self:RegisterEventCallback("MOUNT_JOURNAL_USABILITY_CHANGED", WipeAllOptions)
+  self:RegisterEventCallback("LEARNED_SPELL_IN_TAB",            WipeAllOptions) -- for when a new shapeshift is learned
   
+  -- self:RegisterEventCallback("MOUNT_JOURNAL_USABILITY_CHANGED", WipeUsableOptions)
+  -- self:RegisterEventCallback("LEARNED_SPELL_IN_TAB",            WipeUsableOptions) -- for when a new shapeshift is learned
 end)
 
 
@@ -303,13 +326,15 @@ end)
 
 
 -- debug
-function Addon:GetUsableMounts()
-  AttemptRefreshUsableMounts()
-  return usableMounts
-end
-function Addon:GetIdealMounts()
-  AttemptRefreshIdealMounts()
-  return idealMounts
+if Addon:IsDebugEnabled() then
+  function Addon:GetUsableOptions()
+    AttemptRefreshUsableOptions()
+    return usableOptions
+  end
+  function Addon:GetIdealOptions()
+    AttemptRefreshIdealOptions()
+    return idealOptions
+  end
 end
 
 

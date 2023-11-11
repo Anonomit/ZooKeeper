@@ -30,13 +30,6 @@ end
 
 do
 
-  Addon.zones = {
-    Oculus          = 143,
-    IcecrownCitadel = 187,
-  }
-  
-  
-
 
 
   local knowsColdWeatherFlying = nil
@@ -81,13 +74,89 @@ end
 --  ╚═╝   ╚═╝   ╚══════╝╚═╝     ╚═╝╚══════╝
 
 do
-  Addon.items = {
+  Addon.blackenedUrnQuality = nil
+  
+  Addon.itemsByCategory = {
+    -- ["Molten Core"] = {
+    --   EternalQuintessence = 22754,
+    --   AqualQuintessence   = 17333,
+    -- },
+    -- Karazhan = {
+    --   BlackenedUrn = 24140,
+    -- },
+    -- ["Serpentshrine Cavern"] = {
+    --   TaintedCore = 31088,
+    -- },
+    -- ["The Eye"] = {
+    --   StaffOfDisintegration = 30313,
+    --   NetherstrandLongbow   = 30318,
+    --   WarpSlicer            = 30311,
+    --   Devastation           = 30316,
+    --   CosmicInfuser         = 30317,
+    --   InfinityBlade         = 30312,
+    --   PhaseshiftBulwark     = 30314,
+    -- },
+    -- ["Battle for Mount Hyjal"] = {
+    --   TearsOfTheGoddess = 24494,
+    -- },
+    -- ["Black Temple"] = {
+    --   NajentusSpine = 32408,
+    -- },
     Oculus = {
       EmeraldEssence = 37815,
       AmberEssence   = 37859,
       RubyEssence    = 37860,
     },
+    ["Icecrown Citadel"] = {
+      GoblinRocketPack = 49278,
+    },
   }
+  
+  local items = {}
+  local function Flatten(t)
+    for k, v in pairs(t) do
+      if type(v) == "table" then
+        Flatten(v)
+      else
+        items[k] = v
+      end
+    end
+  end
+  Flatten(Addon.itemsByCategory)
+  
+  local queries = {}
+  local function QueryItemName(key)
+    local itemID = items[key] or key
+    local name = GetItemInfo(itemID)
+    -- if itemID == Addon.itemsByCategory.Karazhan.BlackenedUrn then
+    --   Addon.blackenedUrnQuality = select(3, GetItemInfo(itemID))
+    -- end
+    if not name then
+      if not queries[itemID] then
+        queries[itemID] = Addon:RegisterEventCallback("GET_ITEM_INFO_RECEIVED", function(_, id)
+          if id == itemID then
+            name = GetItemInfo(itemID)
+            if name then
+              -- if itemID == Addon.itemsByCategory.Karazhan.BlackenedUrn then
+              --   Addon.blackenedUrnQuality = select(3, GetItemInfo(itemID))
+              -- end
+              
+              Addon.itemNames[key] = name
+              Addon:UnregisterEventCallbacks("GET_ITEM_INFO_RECEIVED", queries[itemID])
+            end
+          end
+        end)
+      end
+    end
+    return name
+  end
+  
+  Addon.itemNames = setmetatable({}, {__index = function(self, k) self[k] = QueryItemName(k) return rawget(self, k) or k end})
+  
+  for key in pairs(items) do
+    nop(Addon.itemNames[key])
+  end
+  
 end
 
 
@@ -140,7 +209,7 @@ do
   
   
   Addon.spellsByCategory = {
-    druidForms = {
+    DRUID = {
       mounts = {
         -- Druid shapeshift forms
         CatForm         = 768,
@@ -157,8 +226,10 @@ do
         TreeOfLife   = 33891,
       },
     },
-    shamanForms = {
-      GhostWolf = 2645,
+    SHAMAN = {
+      mounts = {
+        GhostWolf = 2645,
+      },
     }
   }
   
@@ -176,8 +247,8 @@ do
   
   Addon.spellNames = setmetatable({}, {__index = function(self, k) self[k] = GetSpellInfo(Addon.spells[k] or k) or "?" return self[k] end})
   
-  for name in pairs(Addon.spells) do
-    nop(Addon.spellNames[name])
+  for key in pairs(Addon.spells) do
+    nop(Addon.spellNames[key])
   end
 end
 

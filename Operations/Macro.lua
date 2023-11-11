@@ -18,14 +18,71 @@ local tblConcat = table.concat
 
 
 
+local conditionalMeta = {
+  __index = {
+    Add = function(self, ...)
+      for _, v in ipairs{...} do
+        tinsert(self.conditions, v)
+      end
+      return self
+    end,
+    Copy = function(self)
+      return Addon.Conditional(unpack(self.conditions))
+    end,
+    Wipe = function(self)
+      wipe(self.conditions)
+      return self
+    end,
+  },
+  __tostring = function(self)
+    return "[" .. tblConcat(self.conditions, ",") .. "]"
+  end
+}
+
+function Addon.Conditional(...)
+  return setmetatable({conditions = {...}}, conditionalMeta)
+end
+
+
+local conditionalsMeta = {
+  __index = {
+    Add = function(self, ...)
+      for _, v in ipairs{...} do
+        tinsert(self.conditionals, v)
+      end
+      return self
+    end,
+    Wipe = function(self)
+      wipe(self.conditionals)
+      return self
+    end,
+  },
+  __tostring = function(self)
+    local str = ""
+    for _, v in ipairs(self.conditionals) do
+      str = str .. tostring(v)
+    end
+    return str
+  end
+}
+
+function Addon.Conditionals(...)
+  return setmetatable({conditionals = {...}}, conditionalsMeta)
+end
+
+
 local LineMeta = {
   __index = {
     Add = function(self, ...)
       local action = ""
       for _, v in ipairs{...} do
-        action = action .. v
+        action = action .. tostring(v)
       end
       tinsert(self.actions, action)
+      return self
+    end,
+    Wipe = function(self)
+      wipe(self.actions)
       return self
     end,
     IsComplete = function(self)

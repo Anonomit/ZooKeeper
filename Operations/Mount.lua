@@ -61,21 +61,25 @@ end
 
 local function Mount(button)
   if InCombatLockdown() then return end
+  Addon:DebugIfOutput("spellButtonClicked", "Mount button clicked")
   
   button:SetAttribute"spell"
   button.id = nil
   
-  -- Stop using a normal mount once I have the mount item in Oculus
-  if Addon:GetZone() == "Oculus" then
-    for key, id in pairs(Addon.items.Oculus) do
-      if GetItemCount(id) > 0 then
-        return
+  local zone = Addon:GetZone()
+  if zone and Addon:GetOption("zone", zone, "useZoneItem") then
+    if zone == "Oculus" then -- Stop using a normal mount once I have the mount item in Oculus
+      for key, id in pairs(Addon.items.Oculus) do
+        if GetItemCount(id) > 0 then
+          return
+        end
       end
     end
   end
   
   
   if Addon:IsRidingMount() then
+    Addon:DebugIfOutput("queueingDismount", "Queueing dismount")
     QueueDismount()
   end
   if Addon:HasValidMounts() and not Addon:IsRidingIdealMount() then
@@ -107,97 +111,116 @@ end
 
 
 
-local init = true
+local macroNeedsUpdate = true
 local function ModifyButton()
   if InCombatLockdown() then return end
-  if not init and not Addon:DoesMountMacroNeedUpdate() then return end
+  if not macroNeedsUpdate and not Addon:DoesMountMacroNeedUpdate() then return end
   
   local macroText = Addon.MacroText()
   
   local travelLine      = Addon.Line"use"
   local extraTravelLine = Addon.Line"use"
   
-  if Addon.MY_CLASS_NAME == "DRUID" then
-    local options = ""
-    
-    if IsSpellKnown(Addon.spells.AquaticForm) then
-      local condition = "[novehicleui,swimming,nomounted]"
-      travelLine:Add(condition, Addon.spellNames.AquaticForm)
-      options = options .. condition
+  local baseConditional = Addon.Conditional"novehicleui"
+  
+  if Addon.MY_CLASS_NAME == "DRUID" and Addon:GetOption("class", "DRUID", "useForms") then
+    if Addon:CanUseForm"AquaticForm" then
+      local conditionals = Addon.Conditionals(baseConditional:Copy():Add("swimming", "nomounted"))
+      travelLine:Add(conditionals, Addon.spellNames.AquaticForm)
     end
-    if IsSpellKnown(Addon.spells.TravelForm) then
-      local condition = "[novehicleui,outdoors,noflyable,noswimming,nomounted][novehicleui,outdoors,flyable,combat,noswimming,nomounted]"
-      travelLine:Add(condition, Addon.spellNames.TravelForm)
-      options = options .. condition
+    if Addon:CanUseForm"TravelForm" then
+      local conditionals = Addon.Conditionals()
+      local conditional  = baseConditional:Copy():Add("outdoors", "nomounted")
+      
+      if not Addon:GetOption("behavior", "allowSlowMounts") then
+        conditionals:Add(conditional:Copy():Add("swimming", "form:4"))
+        conditional:Add("noswimming")
+      end
+      
+      conditionals:Add(conditional:Copy():Add("flyable", "combat"), conditional:Add("noflyable"))
+      travelLine:Add(conditionals, Addon.spellNames.TravelForm)
     end
     
     if Addon:IsFlyableRestricted() then
+      -- this causes unsafe dismounting, even when autoDismountFlying cvar is off
+      
       -- if IsSpellKnown(Addon.spells.SwiftFlightForm) then
-      --   local condition = "[novehicleui,form:6]"
-      --   travelLine:Add(condition, Addon.spellNames.SwiftFlightForm)
-      --   options = options .. condition
+      --   local conditionals = Addon.Conditionals(baseConditional:Copy():Add("form:6"))
+      --   travelLine:Add(conditionals, Addon.spellNames.SwiftFlightForm)
       -- elseif IsSpellKnown(Addon.spells.FlightForm) then
-      --   local condition = "[novehicleui,form:6]"
-      --   travelLine:Add(condition, Addon.spellNames.FlightForm)
-      --   options = options .. condition
+      --   local conditionals = Addon.Conditionals(baseConditional:Copy():Add("form:6"))
+      --   travelLine:Add(conditionals, Addon.spellNames.FlightForm)
       -- end
-      if IsSpellKnown(Addon.spells.TravelForm) then
-        local condition = "[novehicleui,outdoors,flyable,nocombat,noswimming,nomounted]"
-        travelLine:Add(condition, Addon.spellNames.TravelForm)
-        options = options .. condition
+      if Addon:CanUseForm"TravelForm" then
+        local conditionals = Addon.Conditionals()
+        local conditional  = baseConditional:Copy():Add("outdoors", "flyable", "nocombat", "nomounted")
+        
+        if not Addon:GetOption("behavior", "allowSlowMounts") then
+          conditionals:Add(conditional:Copy():Add("swimming", "form:4"))
+          conditional:Add("noswimming")
+        end
+        
+        conditionals:Add(conditional)
+        travelLine:Add(conditionals, Addon.spellNames.TravelForm)
       end
     end
-    if IsSpellKnown(Addon.spells.SwiftFlightForm) then
-      local condition = "[novehicleui,outdoors,flyable,nocombat,noswimming,nomounted][novehicleui,indoors,form:6][novehicleui,noflyable,form:6]"
-      travelLine:Add(condition, Addon.spellNames.SwiftFlightForm)
-      options = options .. condition
-    elseif IsSpellKnown(Addon.spells.FlightForm) then
-      local condition = "[novehicleui,outdoors,flyable,nocombat,noswimming,nomounted]"
-      travelLine:Add(condition, Addon.spellNames.FlightForm)
-      options = options .. condition
+    if Addon:CanUseForm"SwiftFlightForm" then
+      local conditionals = Addon.Conditionals(baseConditional:Copy():Add("outdoors", "flyable", "nocombat", "noswimming", "nomounted"))
+      -- this causes unsafe dismounting, even when autoDismountFlying cvar is off
+      -- conditional = conditional .. "[novehicleui,indoors,form:6][novehicleui,noflyable,form:6]"
+      travelLine:Add(conditionals, Addon.spellNames.SwiftFlightForm)
+    elseif Addon:CanUseForm"FlightForm" then
+      local conditionals = Addon.Conditionals(baseConditional:Copy():Add("outdoors", "flyable", "nocombat", "noswimming", "nomounted"))
+      -- this causes unsafe dismounting, even when autoDismountFlying cvar is off
+      -- conditional = conditional .. "[novehicleui,indoors,form:6][novehicleui,noflyable,form:6]"
+      travelLine:Add(conditionals, Addon.spellNames.FlightForm)
     end
     
-    if IsSpellKnown(Addon.spells.CatForm) and ({GetTalentInfo(2, 12)})[5] > 0 then -- Cat form has a speed boost
-      local condition = "[novehicleui,noflyable,noswimming,nomounted]"
-      travelLine:Add(condition, Addon.spellNames.CatForm)
-      options = options .. condition
-    end
-    
-    if travelLine:IsComplete() then
-      for aura in pairs(Addon.spellsByCategory.druidForms.nonMounts) do
-        -- macroText:AddLine(Addon.Line("cancelaura"):Add(options, Addon.spellNames[aura]))
+    if Addon:CanUseForm"CatForm" and ({GetTalentInfo(2, 12)})[5] > 0 then -- Cat form has a speed boost
+      local conditionals = Addon.Conditionals()
+      local conditional  = baseConditional:Copy():Add("outdoors", "nomounted")
+      
+      if not Addon:GetOption("behavior", "allowSlowMounts") then
+        conditionals:Add(conditional:Copy():Add("swimming", "form:3"))
+        conditional:Add("noswimming")
       end
+      
+      conditionals:Add(conditional:Copy():Add("flyable", "combat"), conditional:Add("noflyable"))
+      travelLine:Add(conditionals, Addon.spellNames.CatForm)
     end
     
   elseif Addon.MY_CLASS_NAME == "SHAMAN" then
-    local options = ""
-    
-    if IsSpellKnown(Addon.spells.GhostWolf) then
-      local condition
-      if Addon:HasValidMounts() then
-        condition = "[novehicleui,combat,outdoors,nomounted]"
-      else
-        condition = "[novehicleui,outdoors,nomounted]"
+    if Addon:CanUseForm"GhostWolf" then
+      local conditionals = Addon.Conditionals()
+      local conditional  = baseConditional:Copy():Add("outdoors", "nomounted")
+      if ({GetTalentInfo(2, 3)})[5] ~= 2 and Addon:HasValidMounts() then -- shapeshift is not instant, and I can use a real mount
+        conditional:Add("combat")
       end
-      options = options .. condition
-      travelLine:Add(condition, Addon.spellNames.GhostWolf)
-    end
-    
-    if travelLine:IsComplete() then
-      for aura in pairs(Addon.spellsByCategory.shamanForms) do
-        -- macroText:AddLine(Addon.Line("cancelaura"):Add(options, Addon.spellNames[aura]))
+      if not Addon:GetOption("behavior", "allowSlowMounts") then
+        conditionals:Add(conditional:Copy():Add("swimming", "form"))
+        conditional:Add("noswimming")
       end
+      conditionals:Add(conditional)
+      travelLine:Add(conditionals, Addon.spellNames.GhostWolf)
     end
   end
   
   local zone = Addon:GetZone()
-  if zone == "Icecrown Citadel" then
-    macroText:AddLine("/use [@cursor]Goblin Rocket Pack")
-  elseif zone == "Oculus" then
-    for key, id in pairs(Addon.items.Oculus) do
-      macroText:AddLine(Addon.Line("use"):Add("item:" .. id))
+  if zone and Addon:GetOption("zone", zone, "useZoneItem") then
+    if zone == "Icecrown Citadel" then
+      if GetItemCount(Addon.itemsByCategory[zone].GoblinRocketPack) > 0 then
+        travelLine:Wipe()
+      end
+      
+      local condition = Addon:GetOption("zone", zone, "atCursor") and "[@cursor]" or ""
+      macroText:AddLine(Addon.Line("equip"):Add("item:" .. Addon.itemsByCategory[zone].GoblinRocketPack))
+      macroText:AddLine(Addon.Line("use"):Add(condition, "item:" .. Addon.itemsByCategory[zone].GoblinRocketPack))
+    elseif zone == "Oculus" then
+      for key, id in pairs(Addon.items.Oculus) do
+        macroText:AddLine(Addon.Line("use"):Add("item:" .. id))
+      end
+      macroText:AddLine"/run VehicleExit()"
     end
-    macroText:AddLine"/run VehicleExit()"
   end
   
   if travelLine:IsComplete() then
@@ -226,10 +249,13 @@ local function ModifyButton()
   end
   macroText:Apply(MACRO_BUTTON_NAME)
   
-  init = false
+  macroNeedsUpdate = false
 end
 
-
+local function FlagForUpdate()
+  macroNeedsUpdate = true
+  ModifyButton()
+end
 
 
 
@@ -240,11 +266,23 @@ Addon:RegisterEnableCallback(function(self)
   self:GetSpellButton(SPELL_BUTTON_NAME):SetScript("PostClick", PostMount)
   
   self:GetMacroButton(MACRO_BUTTON_NAME):SetScript("PreClick", ModifyButton)
+  self:RegisterEventCallback("PLAYER_REGEN_DISABLED",          ModifyButton)
   
-  Addon:OnCombatEnd(function(self)
-    self:GetMacroButton(MACRO_BUTTON_NAME):SetAttribute("macrotext",  "/click " .. self:GetMacroButtonName(MACRO_BUTTON_NAME, n))
-    ModifyButton()
-  end)
+  
+  self:RegisterEventCallback("ZONE_CHANGED",             FlagForUpdate) -- subzone changed
+  self:RegisterEventCallback("ZONE_CHANGED_NEW_AREA",    FlagForUpdate) -- zone changed
+  self:RegisterEventCallback("PLAYER_TALENT_UPDATE",     FlagForUpdate) -- relevant for some travel forms
+  self:RegisterEventCallback("BAG_UPDATE_DELAYED",       FlagForUpdate) -- used for zone-specific items
+  self:RegisterEventCallback("PLAYER_EQUIPMENT_CHANGED", FlagForUpdate) -- used for zone-specific items
+  self:RegisterEventCallback("UNIT_AURA", function(self, e, unitID)
+    if unitID == "player" then
+      FlagForUpdate()
+    end
+  end) -- used for auras that block mounting
+  
+  -- Just in case, run as soon as possible upon login
+  self:OnCombatEnd(ModifyButton)
+  
 end)
 
 

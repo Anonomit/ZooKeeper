@@ -17,6 +17,7 @@ do
   local order        = defaultOrder
   
   local dbType = ""
+  -- local GetFunction      = function(keys) local funcName = format("Get%sOption",   dbType) return function(info)      local val = Addon[funcName](Addon, unpack(keys)) Addon:Assert(val ~= nil, "[Warning] Checkbox value is nil: " .. tblConcat(keys, " > ")) return val end end
   local GetFunction      = function(keys) local funcName = format("Get%sOption",   dbType) return function(info)      return Addon[funcName](Addon, unpack(keys))      end end
   local SetFunction      = function(keys) local funcName = format("Set%sOption",   dbType) return function(info, val)        Addon[funcName](Addon, val, unpack(keys)) end end
   local ResetFunction    = function(keys) local funcName = format("Reset%sOption", dbType) return function(info, val)        Addon[funcName](Addon, unpack(keys))      end end
@@ -134,18 +135,18 @@ do
   
   function GUI:CreateGroup(opts, key, name, desc, groupType, disabled)
     key = tostring(key)
-    opts.args[key] = {name = name, desc = desc, type = "group", childGroups = groupType, args = {}, order = self:Order(), disabled = disabled}
+    opts.args[key] = {name = name, desc = desc, type = "group", childGroups = groupType or "tab", args = {}, order = self:Order(), disabled = disabled}
     return opts.args[key]
   end
   function GUI:CreateGroupBox(opts, name)
     local key = self:Order(-1)
-    local option = self:CreateGroup(opts, key, name)
+    local option = self:CreateGroup(opts, key, name or "")
     option.inline = true
     return option
   end
   
   function GUI:CreateOpts(name, groupType, disabled)
-    return {name = name, type = "group", childGroups = groupType, args = {}, order = self:Order()}
+    return {name = name, type = "group", childGroups = groupType or "tab", args = {}, order = self:Order()}
   end
 end
 

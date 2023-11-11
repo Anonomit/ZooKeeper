@@ -12,6 +12,34 @@ function Addon:MakeDefaultOptions()
         fav = {
           ["*"] = false,
         },
+        
+        behavior = {
+          onlyUseFavs = false,
+          preferNonFlyingMountsOnGround = true,
+          allowSlowMounts = true,
+          useTrueRandomization = false,
+          hideErrorMessages = true,
+        },
+        
+        class = {
+          ["**"] = {
+            useForms = true,
+            allowedForms = {
+              ["*"] = true,
+            },
+            allowRiskyShapeshifting = false,
+          },
+          DRUID = {
+            alwaysPreferFlightForm = false,
+          },
+        },
+        
+        zone = {
+          ["**"] = {
+            useZoneItems = true,
+            ["*"]        = true,
+          },
+        },
       },
 
 

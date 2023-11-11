@@ -42,11 +42,11 @@ end
 
 
 function Addon:GetMacroButtonName(parent, n)
-  return format(EXTENDER_PATTERN, parent, n or 1)
+  return n == 0 and parent or format(EXTENDER_PATTERN, parent, n or 1)
 end
 
 function Addon:BindMacro(parent, macroText)
-  local n = 1
+  local n = 0
   local buffer = ""
   
   for i, line in ipairs(macroText:GetLines()) do

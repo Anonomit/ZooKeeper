@@ -55,7 +55,34 @@ L["Clear Cache"]                  = BROWSER_CLEAR_CACHE
 
 
 
+
+
+
 L["Mounts"]     = MOUNTS
 L["Companions"] = COMPANIONS
+
+L["Class"] = CLASS
+
+L["Zone"]                   = ZONE
+L["Classic"]                = EXPANSION_NAME0
+L["The Burning Crusade"]    = EXPANSION_NAME1
+L["Wrath of the Lich King"] = EXPANSION_NAME2
+
+L["Use Item"] = USE_ITEM
+
+L["Legendaries"] = LOOT_JOURNAL_LEGENDARIES
+
+L["Preferences"]   = PREFERENCES
+L["Shapeshifting"] = TUTORIAL_TITLE61_DRUID
+
+
+
+
+
+
+
+
+
+
 
 

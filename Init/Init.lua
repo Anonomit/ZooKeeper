@@ -334,7 +334,7 @@ do
           val = val[key]
         end
         if type(val) == "table" then
-          self:Debugf("Warning! Database request returned a table: %s", tblConcat({dbKey, typeKey, ...}, " > "))
+          self:Debugf("[Warning] Database request returned a table: %s", tblConcat({dbKey, typeKey, ...}, " > "))
         end
         return val
       end
@@ -671,6 +671,16 @@ do
     Addon.chatArgs[arg] = func
   end
 
+  function Addon:RegisterChatArgAliases(arg, func)
+    for i = #arg, 1, -1 do
+      local alias = strSub(arg, 1, i)
+      if not self.chatArgs[alias] then
+        self:RegisterChatArg(alias, func)
+      end
+    end
+    Addon.chatArgs[arg] = func
+  end
+
   function Addon:OnChatCommand(input)
     local args = {self:GetArgs(input, 1)}
     
@@ -692,7 +702,7 @@ do
     end
 
     local function PrintVersion() self:Printf("Version: %s", tostring(self.version)) end
-    for _, arg in ipairs{"version", "vers", "ver", "v"} do self:RegisterChatArg(arg, PrintVersion) end
+    self:RegisterChatArgAliases("version", PrintVersion)
   end
 end
 

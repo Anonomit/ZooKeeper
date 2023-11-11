@@ -19,13 +19,13 @@ end
 
 
 
-local critterIndex               = 0
-local allCritters                = {}
-local allCrittersNeedsRefresh    = true
-local idealCritters              = {}
-local idealCrittersNeedsRefresh  = true
-local usableCritters             = {}
-local usableCrittersNeedsRefresh = true
+local optionIndex               = 0
+local allOptions                = {}
+local allOptionsNeedsRefresh    = true
+local idealOptions              = {}
+local idealOptionsNeedsRefresh  = true
+local usableOptions             = {}
+local usableOptionsNeedsRefresh = true
 
 
 
@@ -33,8 +33,8 @@ local usableCrittersNeedsRefresh = true
 
 
 
-local function RefreshAllCritters()
-  wipe(allCritters)
+local function RefreshAllOptions()
+  wipe(allOptions)
   
   local count = 0
   for i = 1, C_PetJournal.GetNumPets() do
@@ -42,18 +42,18 @@ local function RefreshAllCritters()
     if petID then
       local isSummonable, error, errorText = C_PetJournal.GetPetSummonInfo(petID)
       local active = C_PetJournal.IsCurrentlySummoned(petID)
-      allCritters[petID] = {name = speciesName, active = active}
+      allOptions[petID] = {name = speciesName, active = active}
       count = count + 1
     end
   end
   
-  allCrittersNeedsRefresh = false
+  allOptionsNeedsRefresh = false
 end
 
 
 
-local function RefreshUsableCritters()
-  wipe(usableCritters)
+local function RefreshUsableOptions()
+  wipe(usableOptions)
   
   local count = 0
   for i = 1, C_PetJournal.GetNumPets() do
@@ -62,32 +62,32 @@ local function RefreshUsableCritters()
       local isSummonable, error, errorText = C_PetJournal.GetPetSummonInfo(petID)
       local active = C_PetJournal.IsCurrentlySummoned(petID)
       if isSummonable then
-        usableCritters[petID] = {name = speciesName, active = active}
+        usableOptions[petID] = {name = speciesName, active = active}
         count = count + 1
       end
     end
   end
   
-  Addon:DebugfIfOutput("usableSelected", "Usable critters updated: %d found%s", count, table.concat(Addon:Map(Addon:Squish(usableCritters), function(v, k) return format("\n%d: %s", k, v.name) end), ""))
+  Addon:DebugfIfOutput("usableSelected", "Usable critters updated: %d found%s", count, table.concat(Addon:Map(Addon:Squish(usableOptions), function(v, k) return format("\n%d: %s", k, v.name) end), ""))
   
-  usableCrittersNeedsRefresh = false
-  RefreshAllCritters()
+  usableOptionsNeedsRefresh = false
+  RefreshAllOptions()
 end
-local function AttemptRefreshUsableCritters()
-  if usableCrittersNeedsRefresh then
-    RefreshUsableCritters()
+local function AttemptRefreshUsableOptions()
+  if usableOptionsNeedsRefresh then
+    RefreshUsableOptions()
   end
 end
 
 
-local function RefreshIdealCritters()
-  AttemptRefreshUsableCritters()
-  wipe(idealCritters)
+local function RefreshIdealOptions()
+  AttemptRefreshUsableOptions()
+  wipe(idealOptions)
   
   local nonFavCritters = {}
   local favCritters    = {}
   
-  for id in pairs(usableCritters) do
+  for id in pairs(usableOptions) do
     tinsert(nonFavCritters, id)
     if Addon:GetOption("fav", id) then
       tinsert(favCritters, id)
@@ -95,20 +95,20 @@ local function RefreshIdealCritters()
   end
   
   if #favCritters > 0 then
-    idealCritters = favCritters
+    idealOptions = favCritters
   else
-    idealCritters = nonFavCritters
+    idealOptions = nonFavCritters
   end
   
-  Addon:DebugfIfOutput("idealSelected", "Ideal critters updated: %d found%s", #idealCritters, table.concat(Addon:Map(idealCritters, function(v, k) return format("\n%d: %s", k, usableCritters[v].name) end), ""))
+  Addon:DebugfIfOutput("idealSelected", "Ideal critters updated: %d found%s", #idealOptions, table.concat(Addon:Map(idealOptions, function(v, k) return format("\n%d: %s", k, usableOptions[v].name) end), ""))
   
-  Addon:Shuffle(idealCritters)
-  idealCrittersNeedsRefresh = false
-  critterIndex = 0
+  Addon:Shuffle(idealOptions)
+  idealOptionsNeedsRefresh = false
+  optionIndex = 0
 end
-local function AttemptRefreshIdealCritters()
-  if idealCrittersNeedsRefresh then
-    RefreshIdealCritters()
+local function AttemptRefreshIdealOptions()
+  if idealOptionsNeedsRefresh then
+    RefreshIdealOptions()
   end
 end
 
@@ -116,52 +116,52 @@ end
 
 
 
-local function WipeIdealCritters()
-  if not idealCrittersNeedsRefresh then
+local function WipeIdealOptions()
+  if not idealOptionsNeedsRefresh then
     Addon:DebugIfOutput("idealReset", "Ideal critters cleared")
-    wipe(idealCritters)
-    idealCrittersNeedsRefresh = true
+    wipe(idealOptions)
+    idealOptionsNeedsRefresh = true
   end
 end
-local function WipeUsablePets()
-  if not usableCrittersNeedsRefresh then
+local function WipeUsableOptions()
+  if not usableOptionsNeedsRefresh then
     Addon:DebugIfOutput("usableReset", "Usable critters cleared")
-    wipe(usableCritters)
-    usableCrittersNeedsRefresh = true
+    wipe(usableOptions)
+    usableOptionsNeedsRefresh = true
   end
-  WipeIdealCritters()
+  WipeIdealOptions()
 end
 
 
 
 
 function Addon:DoesPetMacroNeedUpdate()
-  return idealCrittersNeedsRefresh or usableCrittersNeedsRefresh
+  return idealOptionsNeedsRefresh or usableOptionsNeedsRefresh
 end
 
 function Addon:HasValidCritters()
-  AttemptRefreshIdealCritters()
-  return #idealCritters > 0
+  AttemptRefreshIdealOptions()
+  return #idealOptions > 0
 end
 
 function Addon:GetSummonedCritter()
-  AttemptRefreshUsableCritters()
-  for _, id in ipairs(idealCritters) do
-    if usableCritters[id].active then
+  AttemptRefreshUsableOptions()
+  for _, id in ipairs(idealOptions) do
+    if usableOptions[id].active then
       return id
     end
   end
 end
 
 function Addon:HasSummonedCritter()
-  AttemptRefreshUsableCritters()
+  AttemptRefreshUsableOptions()
   return self:GetSummonedCritter() and true or false
 end
 
 function Addon:HasSummonedValidCritter()
-  AttemptRefreshUsableCritters()
-  for _, id in ipairs(idealCritters) do
-    if allCritters[id].active then
+  AttemptRefreshUsableOptions()
+  for _, id in ipairs(idealOptions) do
+    if allOptions[id].active then
       return true
     end
   end
@@ -169,13 +169,20 @@ function Addon:HasSummonedValidCritter()
 end
 
 function Addon:SelectCritter()
-  AttemptRefreshIdealCritters()
-  local critter = idealCritters[critterIndex+1]
-  if critter == lastID then
-    critterIndex = (critterIndex+1) % (#idealCritters)
-    critter = idealCritters[critterIndex+1]
+  AttemptRefreshIdealOptions()
+  local id
+  
+  if self:GetOption("behavior", "useTrueRandomization") then
+    id = self:Random(idealOptions)
+  else
+    id = idealOptions[optionIndex+1]
+    if id == lastID then
+      optionIndex = (optionIndex+1) % (#idealOptions)
+      id = idealOptions[optionIndex+1]
+    end
   end
-  return critter
+  self:DebugfIfOutput("finalSelectionMade", "Critter selected: %s (%d)", usableOptions[id].name, id)
+  return id
 end
 
 
@@ -187,13 +194,13 @@ Addon:RegisterEnableCallback(function(self)
   
   self:RegisterOptionSetHandler(WipeIdealPets)
   
-  self:RegisterEventCallback("NEW_PET_ADDED",           WipeUsablePets)
-  self:RegisterEventCallback("PET_JOURNAL_LIST_UPDATE", WipeUsablePets)
+  self:RegisterEventCallback("NEW_PET_ADDED",           WipeUsableOptions)
+  self:RegisterEventCallback("PET_JOURNAL_LIST_UPDATE", WipeUsableOptions)
   
   -- fires for other players too
   self:RegisterEventCallback("COMPANION_UPDATE", function(self, event, category)
     if category == "CRITTER" then
-      WipeUsablePets()
+      WipeUsableOptions()
     end
   end)
 end)
@@ -205,11 +212,13 @@ end)
 
 
 -- debug
-function Addon:GetUsableCritters()
-  return usableCritters
-end
-function Addon:GetIdealCritters()
-  return idealCritters
+if Addon:IsDebugEnabled() then
+  function Addon:GetUsableOptions()
+    return usableOptions
+  end
+  function Addon:GetIdealOptions()
+    return idealOptions
+  end
 end
 
 

@@ -24,6 +24,7 @@ local SPELL_BUTTON_NAME = MACRO_BUTTON_NAME .. "_SPELL"
 
 local function Summon(button)
   if InCombatLockdown() then return end
+  Addon:DebugIfOutput("spellButtonClicked", "Pet button clicked")
   
   button:SetAttribute"spell"
   button.id = nil
@@ -54,10 +55,10 @@ end
 
 
 
-local init = true
+local macroNeedsUpdate = true
 local function ModifyButton()
   if InCombatLockdown() then return end
-  if not init and not Addon:DoesPetMacroNeedUpdate() then return end
+  if not macroNeedsUpdate and not Addon:DoesPetMacroNeedUpdate() then return end
   
   local macroText = Addon.MacroText()
   
@@ -74,7 +75,11 @@ local function ModifyButton()
   end
   macroText:Apply(MACRO_BUTTON_NAME)
   
-  init = false
+  macroNeedsUpdate = false
+end
+
+local function FlagForUpdate()
+  macroNeedsUpdate = true
 end
 
 
@@ -87,10 +92,10 @@ Addon:RegisterEnableCallback(function(self)
   self:GetSpellButton(SPELL_BUTTON_NAME):SetScript("PostClick", PostSummon)
   
   self:GetMacroButton(MACRO_BUTTON_NAME):SetScript("PreClick", ModifyButton)
+  self:RegisterEventCallback("PLAYER_REGEN_DISABLED",          ModifyButton)
   
-  Addon:OnCombatEnd(function(self)
-    self:GetMacroButton(MACRO_BUTTON_NAME):SetAttribute("macrotext",  "/click " .. self:GetMacroButtonName(MACRO_BUTTON_NAME, n))
-    ModifyButton()
-  end)
+  
+  -- Just in case, run as soon as possible upon login
+  self:OnCombatEnd(ModifyButton)
 end)
 

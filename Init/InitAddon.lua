@@ -16,19 +16,26 @@ ZooKeeper   = Addon
 --   ╚═════╝ ╚═╝    ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝
 
 do
+   -- "Sound_EnableErrorSpeech"
+   -- "Sound_EnableAllSound"
+  
   function Addon:BlockUIErrors()
-    self:xpcall(function()
-      if not _G.ErrorFilter then -- ErrorFilter causes the event to be delayed
-        UIErrorsFrame:UnregisterEvent"UI_ERROR_MESSAGE"
-      end
-    end)
+    if self:GetOption("behavior", "hideErrorMessages") then
+      self:xpcall(function()
+        if not _G.ErrorFilter then -- ErrorFilter causes the event to be delayed
+          UIErrorsFrame:UnregisterEvent"UI_ERROR_MESSAGE"
+        end
+      end)
+    end
   end
   function Addon:AllowUIErrors()
-    self:xpcall(function()
-      if not _G.ErrorFilter then -- ErrorFilter causes the event to be delayed
-        UIErrorsFrame:RegisterEvent"UI_ERROR_MESSAGE"
-      end
-    end)
+    if self:GetOption("behavior", "hideErrorMessages") then
+      self:xpcall(function()
+        if not _G.ErrorFilter then -- ErrorFilter causes the event to be delayed
+          UIErrorsFrame:RegisterEvent"UI_ERROR_MESSAGE"
+        end
+      end)
+    end
   end
 end
 
@@ -232,6 +239,33 @@ end
 
 
 
+--  ███████╗ ██████╗ ██████╗ ███╗   ███╗███████╗
+--  ██╔════╝██╔═══██╗██╔══██╗████╗ ████║██╔════╝
+--  █████╗  ██║   ██║██████╔╝██╔████╔██║███████╗
+--  ██╔══╝  ██║   ██║██╔══██╗██║╚██╔╝██║╚════██║
+--  ██║     ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████║
+--  ╚═╝      ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝
+
+do
+  local formOptions = {
+    CatForm         = "CatForm",
+    TravelForm      = "TravelForm",
+    AquaticForm     = "AquaticForm",
+    FlightForm      = "FlightForm",
+    SwiftFlightForm = "FlightForm",
+    
+    GhostWolf       = "GhostWolf",
+  }
+  
+  function Addon:CanUseForm(form)
+    return self:GetOption("class", self.MY_CLASS_NAME, "useForms") and self:GetOption("class", self.MY_CLASS_NAME, "allowedForms", formOptions[form]) and IsSpellKnown(self.spells[form])
+  end
+end
+
+
+
+
+
 
 --  ██╗      ██████╗  ██████╗ █████╗ ████████╗██╗ ██████╗ ███╗   ██╗███████╗
 --  ██║     ██╔═══██╗██╔════╝██╔══██╗╚══██╔══╝██║██╔═══██╗████╗  ██║██╔════╝
@@ -242,18 +276,40 @@ end
 
 do
   local zones = {
-    [143] = "Oculus",
-    [187] = "Icecrown Citadel",
-    
+    -- Restricted Flyable
     [123] = "Wintergrasp",
     [125] = "Dalaran",
     [126] = "Dalaran Underbelly",
+    
+    -- WotLK
+    [143] = "Oculus",
+    [187] = "Icecrown Citadel",
+    
+    -- TBC
+    [332] = "Serpentshrine Cavern",
+    [334] = "The Eye",
+    [329] = "Battle for Mount Hyjal",
+    -- [339] = "Black Temple", -- Black Temple
+    [340] = "Black Temple", -- Karabor Sewers
+    -- [341] = "Black Temple", -- Sanctuary of Shadows
+    -- [342] = "Black Temple", -- Halls of Anguish
+    -- [343] = "Black Temple", -- Gorefiend's Vigil
+    -- [344] = "Black Temple", -- Den of Mortal Delights
+    -- [345] = "Black Temple", -- Chamber of Command
+    -- [346] = "Black Temple", -- Temple Summit
+    
+    -- Classic
+    [232] = "Molten Core",
+    -- [287] = "Blackwing Lair", -- Dragonmaw Garrison
+    -- [288] = "Blackwing Lair", -- Halls of Strife
+    -- [289] = "Blackwing Lair", -- Crimson Laboratories
+    [290] = "Blackwing Lair", -- Nefarian's Lair
   }
   
   local flyableRestrictedZones = Addon:MakeLookupTable{
-    123, -- Wintergrasp
-    125, -- Dalaran
-    126, -- Dalaran Underbelly
+    "Wintergrasp",
+    "Dalaran",
+    "Dalaran Underbelly",
   }
   
   function Addon:GetZone()
@@ -261,7 +317,7 @@ do
   end
   
   function Addon:GetZoneIsFlyableRestricted()
-    return flyableRestrictedZones[C_Map.GetBestMapForUnit"player" or 0] and true or false
+    return flyableRestrictedZones[Addon:GetZone() or 0] and true or false
   end
   
   
