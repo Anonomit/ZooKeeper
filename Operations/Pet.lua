@@ -26,35 +26,28 @@ local function Summon(button)
   if InCombatLockdown() then return end
   Addon:DebugIfOutput("spellButtonClicked", "Pet button clicked")
   
-  -- button:SetAttribute"spell"
-  -- button.id = nil
-  
   local id
   
-  if not Addon:HasValidCritters() or Addon:HasSummonedValidCritter() then
-    id = Addon:GetSummonedCritter()
-    C_PetJournal.DismissSummonedPet(id)
-    Addon:SetLastCritter(id)
-  elseif Addon:HasValidCritters() then
-    id = Addon:SelectCritter()
-    C_PetJournal.SummonPetByGUID(id)
-    Addon:SetLastCritter(id)
+  if Addon.isClassic then
+    if Addon:HasValidCritters() then
+      local spellID, itemID = Addon:SelectCritter()
+      button:SetAttribute("type", "item")
+      button:SetAttribute("item", "item:" .. itemID)
+      Addon:SetLastCritter(spellID)
+    end
+  else
+    if not Addon:HasValidCritters() or Addon:HasSummonedValidCritter() then
+      id = Addon:GetSummonedCritter()
+      C_PetJournal.DismissSummonedPet(id)
+      Addon:SetLastCritter(id)
+    elseif Addon:HasValidCritters() then
+      id = Addon:SelectCritter()
+      C_PetJournal.SummonPetByGUID(id)
+      Addon:SetLastCritter(id)
+    end
   end
   
-  -- if id then
-  --   button.id = id
-    
-  --   local name = select(8, C_PetJournal.GetPetInfoByPetID(id))
-    
-  --   button:SetAttribute("spell", name)
-  -- end
 end
--- local function PostSummon(button)
---   local id = button.id
---   if id then
---     Addon:SetLastCritter(id)
---   end
--- end
 
 
 
@@ -77,11 +70,6 @@ local function ModifyButton()
     end
   end
   
-  if Addon.isClassic then
-    macroText = Addon.MacroText()
-    macroText:AddLine("/run StaticPopup_Show('ZOOKEEPER_COMMAND_NOT_SUPPORT_IN_VERSION', '/click ZKP', EXPANSION_NAME0)")
-  end
-  
   macroText:Apply(MACRO_BUTTON_NAME)
   
   macroNeedsUpdate = false
@@ -97,8 +85,7 @@ end
 
 
 Addon:RegisterEnableCallback(function(self)
-  self:GetSpellButton(SPELL_BUTTON_NAME):SetScript("PreClick",  Summon)
-  -- self:GetSpellButton(SPELL_BUTTON_NAME):SetScript("PostClick", PostSummon)
+  self:GetItemButton(SPELL_BUTTON_NAME):SetScript("PreClick",  Summon)
   
   self:GetMacroButton(MACRO_BUTTON_NAME):SetScript("PreClick", ModifyButton)
   self:RegisterEventCallback("PLAYER_REGEN_DISABLED",          ModifyButton)

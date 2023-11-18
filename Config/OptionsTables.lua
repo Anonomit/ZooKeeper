@@ -31,9 +31,9 @@ local function ToggleCrittersJournal()
   ToggleJournal(2)
 end
 
-local function ForgetDiscovered(spellID)
+local function ForgetDiscovered(category, spellID)
   Addon:SetOption(false, "fav",        spellID)
-  Addon:SetOption(nil,   "discovered", spellID)
+  Addon:SetOption(nil,   "discovered", category, spellID)
 end
 
 
@@ -55,39 +55,52 @@ local function MakeGeneralOptions(opts)
       local icon = self:MakeIcon"Interface\\AddOns\\ZooKeeper\\Assets\\Textures\\FavoriteSet"
       GUI:CreateDescription(opts, icon .. " " .. self.L["Favorites"] .. " " .. icon)
     end
-    GUI:CreateDivider(opts)
     
-    local count = 0
-    for spellID, itemID in pairs(self:GetOptionT"discovered") do
-      count = count + 1
-      if count > 1 then
-        GUI:CreateNewline(opts)
+    for k, v in ipairs{
+      {"mounts", self.L["Mounts"]},
+      {"critters", self.L["Pets"]},
+    } do
+      local opts = GUI:CreateGroup(opts, v[2], v[2])
+      
+      GUI:CreateDivider(opts)
+      
+      local count = 0
+      for spellID, itemID in pairs(self:GetOptionT("discovered", v[1])) do
+        count = count + 1
+        if count > 1 then
+          GUI:CreateNewline(opts)
+        end
+        local text = self.spellNames[spellID]
+        
+        local icon = select(3, GetSpellInfo(spellID))
+        if icon then
+          text = self:MakeIcon(icon) .. " " .. text
+        end
+        
+        GUI:CreateExecute(opts, {"forget", spellID}, self.L["Remove"], nil, function() ForgetDiscovered(v[1], spellID) end)
+        
+        local option = GUI:CreateToggle(opts, {"fav", spellID}, text)
+        option.width = 1.5
+        if type(itemID) == "number" then
+          option.tooltipHyperlink = "item:" .. itemID
+        else
+          option.tooltipHyperlink = "spell:" .. spellID
+        end
+        
       end
-      local text = self.spellNames[spellID]
       
-      local icon = select(3, GetSpellInfo(spellID))
-      if icon then
-        text = self:MakeIcon(icon) .. " " .. text
+      if count == 0 then
+        GUI:CreateDescription(opts, self.L["No items found"])
       end
-      
-      GUI:CreateExecute(opts, {"forget", spellID}, self.L["Remove"], nil, function() ForgetDiscovered(spellID) end)
-      
-      local option = GUI:CreateToggle(opts, {"fav", spellID}, text)
-      option.width = 1.5
-      if type(itemID) == "number" then
-        option.tooltipHyperlink = "item:" .. itemID
-      else
-        option.tooltipHyperlink = "spell:" .. spellID
-      end
-      
     end
+    
   else
     GUI:CreateNewline(opts)
     
     GUI:CreateExecute(opts, {"openMounts"}, self.L["Mounts"], nil, ToggleMountsJournal)
     GUI:CreateNewline(opts)
     
-    GUI:CreateExecute(opts, {"openCritters"}, self.L["Companions"], nil, ToggleCrittersJournal)
+    GUI:CreateExecute(opts, {"openCritters"}, self.L["Pets"], nil, ToggleCrittersJournal)
   end
   
   return opts

@@ -67,6 +67,9 @@ do
   function Addon:GetSpellButton(name)
     return GetButton(name, "spell")
   end
+  function Addon:GetItemButton(name)
+    return GetButton(name, "item")
+  end
 end
 
 

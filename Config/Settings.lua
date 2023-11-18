@@ -12,7 +12,10 @@ function Addon:MakeDefaultOptions()
         fav = {
           ["*"] = false,
         },
-        discovered = {},
+        discovered = {
+          mounts   = {},
+          critters = {},
+        },
         
         behavior = {
           preferNonFlyingMountsOnGround = true,

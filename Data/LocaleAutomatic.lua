@@ -58,10 +58,12 @@ L["Clear Cache"]                  = BROWSER_CLEAR_CACHE
 
 
 
-L["Mounts"]     = MOUNTS
-L["Companions"] = COMPANIONS
-L["Favorites"]  = FAVORITES
-L["Remove"]     = REMOVE
+L["Mounts"]         = MOUNTS
+L["Pets"]           = PETS
+L["Companions"]     = COMPANIONS
+L["No items found"] = BROWSE_NO_RESULTS
+L["Favorites"]      = FAVORITES
+L["Remove"]         = REMOVE
 
 L["Class"] = CLASS
 

@@ -37,33 +37,66 @@ local function RefreshAllOptions()
   wipe(allOptions)
   
   local count = 0
-  for i = 1, C_PetJournal.GetNumPets() do
-    local petID, speciesID, owned, customName, level, favorite, isRevoked, speciesName, icon, petType, companionID, tooltip, description, isWild, canBattle, isTradeable, isUnique, obtainable = C_PetJournal.GetPetInfoByIndex(i)
-    if petID then
-      local isSummonable, error, errorText = C_PetJournal.GetPetSummonInfo(petID)
-      local active = C_PetJournal.IsCurrentlySummoned(petID)
-      allOptions[petID] = {name = speciesName, active = active}
-      count = count + 1
+  if Addon.isClassic then
+    for bag = 0, NUM_BAG_SLOTS do
+      for slot = 1, C_Container.GetContainerNumSlots(bag) do
+        local containerInfo = C_Container.GetContainerItemInfo(bag, slot)
+        if containerInfo then
+          local spellName, spellID = GetItemSpell(containerInfo.itemID)
+          if spellID and Addon.critters[spellID] then
+            Addon:SetOption(containerInfo.itemID, "discovered", "critters", spellID)
+            allOptions[spellID] = {name = GetItemInfo(containerInfo.itemID) or spellName, spellID = spellID, isCollected = true, itemID = containerInfo.itemID, bag = bag, slot = slot}
+            count = count + 1
+          end
+        end
+      end
+    end
+  else
+    for i = 1, C_PetJournal.GetNumPets() do
+      local petID, speciesID, owned, customName, level, favorite, isRevoked, speciesName, icon, petType, companionID, tooltip, description, isWild, canBattle, isTradeable, isUnique, obtainable = C_PetJournal.GetPetInfoByIndex(i)
+      if petID then
+        local isSummonable, error, errorText = C_PetJournal.GetPetSummonInfo(petID)
+        local active = C_PetJournal.IsCurrentlySummoned(petID)
+        allOptions[petID] = {name = speciesName, active = active}
+        count = count + 1
+      end
     end
   end
   
+  Addon:DebugfIfOutput("allSelected", "All critters updated: %d found", count)
+  
   allOptionsNeedsRefresh = false
+end
+local function AttemptRefreshAllOptions()
+  if allOptionsNeedsRefresh then
+    RefreshAllOptions()
+  end
 end
 
 
-
 local function RefreshUsableOptions()
+  AttemptRefreshAllOptions()
   wipe(usableOptions)
   
   local count = 0
-  for i = 1, C_PetJournal.GetNumPets() do
-    local petID, speciesID, owned, customName, level, favorite, isRevoked, speciesName, icon, petType, companionID, tooltip, description, isWild, canBattle, isTradeable, isUnique, obtainable = C_PetJournal.GetPetInfoByIndex(i)
-    if petID then
-      local isSummonable, error, errorText = C_PetJournal.GetPetSummonInfo(petID)
-      local active = C_PetJournal.IsCurrentlySummoned(petID)
-      if isSummonable then
-        usableOptions[petID] = {name = speciesName, active = active}
+  if Addon.isClassic then
+    for k, v in pairs(allOptions) do
+      local containerInfo = C_Container.GetContainerItemInfo(v.bag, v.slot)
+      if containerInfo and not containerInfo.isLocked then
+        usableOptions[k] = v
         count = count + 1
+      end
+    end
+  else
+    for i = 1, C_PetJournal.GetNumPets() do
+      local petID, speciesID, owned, customName, level, favorite, isRevoked, speciesName, icon, petType, companionID, tooltip, description, isWild, canBattle, isTradeable, isUnique, obtainable = C_PetJournal.GetPetInfoByIndex(i)
+      if petID then
+        local isSummonable, error, errorText = C_PetJournal.GetPetSummonInfo(petID)
+        local active = C_PetJournal.IsCurrentlySummoned(petID)
+        if isSummonable then
+          usableOptions[petID] = {name = speciesName, active = active}
+          count = count + 1
+        end
       end
     end
   end
@@ -71,7 +104,6 @@ local function RefreshUsableOptions()
   Addon:DebugfIfOutput("usableSelected", "Usable critters updated: %d found%s", count, table.concat(Addon:Map(Addon:Squish(usableOptions), function(v, k) return format("\n%d: %s", k, v.name) end), ""))
   
   usableOptionsNeedsRefresh = false
-  RefreshAllOptions()
 end
 local function AttemptRefreshUsableOptions()
   if usableOptionsNeedsRefresh then
@@ -181,8 +213,11 @@ function Addon:SelectCritter()
       id = idealOptions[optionIndex+1]
     end
   end
-  self:DebugfIfOutput("finalSelectionMade", "Critter selected: %s (%s)", usableOptions[id].name, id)
-  return id
+  self:DebugfIfOutput("finalSelectionMade", "Mount selected: %s (%s %d)", usableOptions[id].name, usableOptions[id].itemID and "item" or "id", id)
+  if self.isClassic then
+    self:SetOption(usableOptions[id].itemID or true, "discovered", "critters", id)
+  end
+  return id, usableOptions[id].itemID
 end
 
 
@@ -190,7 +225,13 @@ end
 
 
 Addon:RegisterEnableCallback(function(self)
-  if not self.isClassic then
+  if self.isClassic then
+    self:RegisterOptionSetHandler(WipeIdealPets)
+    
+    self:RegisterEventCallback("ITEM_LOCK_CHANGED",  WipeUsableOptions) -- used for critters in bag
+    self:RegisterEventCallback("BAG_UPDATE_DELAYED", WipeAllOptions) -- used for critters in bag
+    
+  else
     hooksecurefunc(C_PetJournal, "SummonPetByGUID", function(id) self:SetLastCritter(id) end)
     
     self:RegisterOptionSetHandler(WipeIdealPets)
@@ -205,6 +246,8 @@ Addon:RegisterEnableCallback(function(self)
       end
     end)
   end
+  
+  AttemptRefreshAllOptions()
 end)
 
 
