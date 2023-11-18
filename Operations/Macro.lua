@@ -124,7 +124,7 @@ local MacroMeta = {
       return self
     end,
     
-    AddDruidLine = Addon.MY_CLASS_NAME == "DRUID" and function(self, ...)
+    AddDruidLine = Addon.MY_CLASS_FILENAME == "DRUID" and function(self, ...)
       return self:AddLine(...)
     end or nop,
     

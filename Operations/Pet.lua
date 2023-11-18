@@ -73,6 +73,12 @@ local function ModifyButton()
       Addon:Debug(line)
     end
   end
+  
+  if Addon.isClassic then
+    macroText = Addon.MacroText()
+    macroText:AddLine("/run StaticPopup_Show('ZOOKEEPER_COMMAND_NOT_SUPPORT_IN_VERSION', '/click ZKP', EXPANSION_NAME0)")
+  end
+  
   macroText:Apply(MACRO_BUTTON_NAME)
   
   macroNeedsUpdate = false

@@ -10,7 +10,7 @@ local strSub = string.sub
 
 local tinsert   = tinsert
 local tblConcat = table.concat
-
+local tblSort   = table.sort
 
 
 
@@ -31,7 +31,10 @@ local function ToggleCrittersJournal()
   ToggleJournal(2)
 end
 
-
+local function ForgetDiscovered(spellID)
+  Addon:SetOption(false, "fav",        spellID)
+  Addon:SetOption(nil,   "discovered", spellID)
+end
 
 
 
@@ -47,12 +50,45 @@ local function MakeGeneralOptions(opts)
   local GUI = self.GUI
   local opts = GUI:CreateGroup(opts, ADDON_NAME, ADDON_NAME)
   
-  GUI:CreateNewline(opts)
-  
-  GUI:CreateExecute(opts, {"openMounts"}, self.L["Mounts"], nil, ToggleMountsJournal)
-  GUI:CreateNewline(opts)
-  
-  GUI:CreateExecute(opts, {"openCritters"}, self.L["Companions"], nil, ToggleCrittersJournal)
+  if self.isClassic then
+    do
+      local icon = self:MakeIcon"Interface\\AddOns\\ZooKeeper\\Assets\\Textures\\FavoriteSet"
+      GUI:CreateDescription(opts, icon .. " " .. self.L["Favorites"] .. " " .. icon)
+    end
+    GUI:CreateDivider(opts)
+    
+    local count = 0
+    for spellID, itemID in pairs(self:GetOptionT"discovered") do
+      count = count + 1
+      if count > 1 then
+        GUI:CreateNewline(opts)
+      end
+      local text = self.spellNames[spellID]
+      
+      local icon = select(3, GetSpellInfo(spellID))
+      if icon then
+        text = self:MakeIcon(icon) .. " " .. text
+      end
+      
+      GUI:CreateExecute(opts, {"forget", spellID}, self.L["Remove"], nil, function() ForgetDiscovered(spellID) end)
+      
+      local option = GUI:CreateToggle(opts, {"fav", spellID}, text)
+      option.width = 1.5
+      if type(itemID) == "number" then
+        option.tooltipHyperlink = "item:" .. itemID
+      else
+        option.tooltipHyperlink = "spell:" .. spellID
+      end
+      
+    end
+  else
+    GUI:CreateNewline(opts)
+    
+    GUI:CreateExecute(opts, {"openMounts"}, self.L["Mounts"], nil, ToggleMountsJournal)
+    GUI:CreateNewline(opts)
+    
+    GUI:CreateExecute(opts, {"openCritters"}, self.L["Companions"], nil, ToggleCrittersJournal)
+  end
   
   return opts
 end
@@ -76,13 +112,17 @@ local function MakeBehaviorOptions(opts, categoryName)
   
   local opts = GUI:CreateGroup(opts, categoryName, categoryName)
   
-  GUI:CreateToggle(opts, {"behavior", "onlyUseFavs"}, L["Only use favorites"] , L["Never use a mount/pet that isn't marked as a favorite.|n|nZooKeeper will not be able to use the best mount available if you don't have it favorited.|n|n|cffff2020Make sure you set favorites for every type of mount!"])
-  GUI:CreateNewline(opts)
-  GUI:CreateToggle(opts, {"behavior", "preferNonFlyingMountsOnGround"}, L["Prefer ground-only mounts"] , L["Try to avoid using flying mounts in non-flying areas."])
-  GUI:CreateNewline(opts)
+  if not Addon.isClassic then
+    GUI:CreateToggle(opts, {"behavior", "preferNonFlyingMountsOnGround"}, L["Prefer ground-only mounts"] , L["Try to avoid using flying mounts in non-flying areas."]).width = 1.5
+    GUI:CreateNewline(opts)
+  end
   GUI:CreateToggle(opts, {"behavior", "allowSlowMounts"}, L["Allow slow mounts"] , L["Use a mount/form even when it doesn't increase speed.|n|nThis is most common when swimming without owning any swimming mounts."])
   GUI:CreateNewline(opts)
   GUI:CreateReverseToggle(opts, {"behavior", "useTrueRandomization"}, L["Tweak randomizer"] , L["Allow ZooKeeper to tweak the randomizer to avoid summoning the same mount/pet consecutively."])
+  GUI:CreateNewline(opts)
+  GUI:CreateToggle(opts, {"behavior", "onlyUseFavs"}, L["Only use favorites"] , L["Never use a mount/pet that isn't marked as a favorite.|n|nZooKeeper will not be able to use the best mount available if you don't have it favorited.|n|n|cffff2020Make sure you set favorites for every type of mount!"])
+  GUI:CreateNewline(opts)
+  GUI:CreateToggle(opts, {"behavior", "alwaysDismount"}, L["Always dismount"] , L["When already mounted and a better mount exists, dismount instead of using the better mount."])
   GUI:CreateNewline(opts)
   
   do
@@ -122,8 +162,8 @@ local function MakeClassOptions(opts, categoryName)
   local opts = GUI:CreateGroup(opts, categoryName, categoryName)
     
   local function MakeFormOptions(opts, className, classFilename, forms)
-    GUI:CreateToggle(opts, {"class", classFilename, "useForms"}, self.L["Shapeshifting"], format(L["Use %s class spells."], className))
-    GUI:CreateNewline(opts)
+    GUI:CreateToggle(opts, {"class", classFilename, "useForms"}, self.L["Enable"], format(L["Use %s class spells."], className))
+    -- GUI:CreateNewline(opts)
     
     do
       local opts = GUI:CreateGroupBox(opts)
@@ -138,40 +178,93 @@ local function MakeClassOptions(opts, categoryName)
     end
   end
   
+  local classMenus = {}
+  
   do
     local classID = 11 -- Druid
-    local className, classFilename = GetClassInfo(classID)
     
-    local opts = GUI:CreateGroup(opts, classFilename, className)
-    
-    MakeFormOptions(opts, className, classFilename, {
-      "AquaticForm",
-      "TravelForm",
-      "FlightForm",
-      "CatForm",
-    })
-    
-    GUI:CreateDivider(opts)
-    do
-      local opts = GUI:CreateGroupBox(opts, self.L["Preferences"])
+    classMenus[classID] = function()
+      local className, classFilename = GetClassInfo(classID)
       
-      local disabled = not Addon:GetOption("class", classFilename, "allowedForms", "FlightForm")
+      local opts = GUI:CreateGroup(opts, classFilename, className)
       
-      GUI:CreateToggle(opts, {"class", classFilename, "allowRiskyShapeshifting"}, L["Allow risky shapeshifting"], L["Allows you to exit Flight Form in areas where you won't be able to enter it again, such as indoors or around Dalaran.|n|nEnabling this option may lead to accidental falls."], disabled)
-      GUI:CreateNewline(opts)
-      GUI:CreateToggle(opts, {"class", classFilename, "alwaysPreferFlightForm"}, L["Always prefer Flight Form"], L["Use Flight Form even if a faster mount exists."], disabled)
+      MakeFormOptions(opts, className, classFilename, Addon:Squish{
+        "CatForm",
+        "AquaticForm",
+        "TravelForm",
+        not Addon.isClassic and "FlightForm" or nil,
+      })
+      
+      if not Addon.isClassic then
+        GUI:CreateDivider(opts)
+        do
+          local opts = GUI:CreateGroupBox(opts, self.L["Preferences"])
+          
+          local disabled = not (Addon:GetOption("class", classFilename, "useForms") and Addon:GetOption("class", classFilename, "allowedForms", "FlightForm"))
+          
+          GUI:CreateToggle(opts, {"class", classFilename, "allowRiskyShapeshifting"}, L["Allow risky shapeshifting"], L["Allows you to exit Flight Form in areas where you won't be able to enter it again, such as indoors or around Dalaran.|n|nEnabling this option may lead to accidental falls."], disabled).width = 1.5
+          GUI:CreateNewline(opts)
+          GUI:CreateToggle(opts, {"class", classFilename, "alwaysPreferFlightForm"}, L["Always prefer Flight Form"], L["Use Flight Form even if a faster mount exists."], disabled).width = 1.5
+        end
+      end
     end
   end
   
   do
     local classID = 7 -- Shaman
-    local className, classFilename = GetClassInfo(classID)
     
-    local opts = GUI:CreateGroup(opts, classFilename, className)
+    classMenus[classID] = function()
+      local className, classFilename = GetClassInfo(classID)
+      
+      local opts = GUI:CreateGroup(opts, classFilename, className)
+      
+      MakeFormOptions(opts, className, classFilename, {
+        "GhostWolf",
+      })
+    end
+  end
+  
+  if not Addon.isClassic then
+    local classID = 2 -- Paladin
     
-    MakeFormOptions(opts, className, classFilename, {
-      "GhostWolf",
-    })
+    classMenus[classID] = function()
+      local className, classFilename = GetClassInfo(classID)
+      
+      local opts = GUI:CreateGroup(opts, classFilename, className)
+      
+      MakeFormOptions(opts, className, classFilename, {
+        "CrusaderAura",
+      })
+    end
+  end
+  
+  do
+    local classID = 3 -- Hunter
+    
+    classMenus[classID] = function()
+      local className, classFilename = GetClassInfo(classID)
+      
+      local opts = GUI:CreateGroup(opts, classFilename, className)
+      
+      MakeFormOptions(opts, className, classFilename, {
+        "AspectOfTheCheetah",
+        "AspectOfThePack",
+      })
+    end
+  end
+  
+  do
+    (classMenus[Addon.MY_CLASS_ID] or nop)()
+    classMenus[Addon.MY_CLASS_ID] = nil
+    
+    local menuKeys = {}
+    for key in pairs(classMenus) do
+      tinsert(menuKeys, key)
+    end
+    tblSort(menuKeys, function(a, b) return GetClassInfo(a) < GetClassInfo(b) end)
+    for _, key in ipairs(menuKeys) do
+      classMenus[key]()
+    end
   end
   
   return opts
@@ -199,8 +292,8 @@ local function MakeZoneOptions(opts, categoryName)
   local opts = GUI:CreateGroup(opts, categoryName, categoryName)
   
   
-  do
-    -- local opts = GUI:CreateGroup(opts, "WotLK", self.L["Wrath of the Lich King"])
+  if Addon.expansionLevel >= Addon.expansions.wrath then
+    local opts = GUI:CreateGroup(opts, "WotLK", self.L["Wrath of the Lich King"])
     
     do
       local zone = "Oculus"
@@ -224,11 +317,11 @@ local function MakeZoneOptions(opts, categoryName)
       GUI:CreateReverseToggle(opts, {"zone", zone, "atCursor"}, L["Require click to confirm"], L["Enable to use a targeting circle.|nDisable to use mouse cursor location."], disabled)
     end
   end
-  --[[
-  do
+  
+  if Addon.expansionLevel >= Addon.expansions.tbc then
     local opts = GUI:CreateGroup(opts, "TBC", self.L["The Burning Crusade"])
     
-    if Addon.blackenedUrnQuality ~= 0 then
+    if Addon.expansionLevel < Addon.expansions.wrath then
       local zone = "Karazhan"
       local opts = GUI:CreateGroup(opts, zone, zone)
       
@@ -247,7 +340,6 @@ local function MakeZoneOptions(opts, categoryName)
       local opts = GUI:CreateGroup(opts, zone, zone)
       
       GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, self.L["Legendaries"], L["Equip and activate legendary items."])
-      GUI:CreateDivider(opts)
       
       do
         local opts = GUI:CreateGroupBox(opts)
@@ -283,14 +375,16 @@ local function MakeZoneOptions(opts, categoryName)
   end
   
   do
-    local opts = GUI:CreateGroup(opts, "Classic", self.L["Classic"])
+    local opts = opts
+    if not Addon.isClassic then
+      opts = GUI:CreateGroup(opts, "Classic", self.L["Classic"])
+    end
     
     do
       local zone = "Molten Core"
       local opts = GUI:CreateGroup(opts, zone, zone)
       
-      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, self.L["Use Item"], "desc")
-      GUI:CreateDivider(opts)
+      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, self.L["Use Item"], L["Douse the Runes of Warding."])
       
       do
         local opts = GUI:CreateGroupBox(opts)
@@ -306,10 +400,10 @@ local function MakeZoneOptions(opts, categoryName)
       local zone = "Blackwing Lair"
       local opts = GUI:CreateGroup(opts, zone, zone)
       
-      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, L["Toggle hunter ranged weapon"], "desc").width = 1.5
+      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, L["Toggle hunter ranged weapon"], L["Avoid hunter class calls by toggling ranged weapon off before it happens."]).width = 1.5
     end
   end
-  --]]
+  
   return opts
 end
 

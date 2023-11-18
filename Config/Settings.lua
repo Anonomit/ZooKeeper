@@ -12,12 +12,14 @@ function Addon:MakeDefaultOptions()
         fav = {
           ["*"] = false,
         },
+        discovered = {},
         
         behavior = {
-          onlyUseFavs = false,
           preferNonFlyingMountsOnGround = true,
           allowSlowMounts = true,
           useTrueRandomization = false,
+          onlyUseFavs = false,
+          alwaysDismount = false,
           hideErrorMessages = true,
         },
         

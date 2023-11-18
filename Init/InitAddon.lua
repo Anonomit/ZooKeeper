@@ -7,6 +7,10 @@ ZooKeeper   = Addon
 
 
 
+local strMatch = string.match
+
+
+
 
 --  ██╗   ██╗██╗    ███████╗██████╗ ██████╗  ██████╗ ██████╗ ███████╗
 --  ██║   ██║██║    ██╔════╝██╔══██╗██╔══██╗██╔═══██╗██╔══██╗██╔════╝
@@ -62,6 +66,102 @@ do
   end
   function Addon:GetSpellButton(name)
     return GetButton(name, "spell")
+  end
+end
+
+
+
+
+
+
+
+--  ███████╗████████╗██████╗ ██╗███╗   ██╗ ██████╗ ███████╗
+--  ██╔════╝╚══██╔══╝██╔══██╗██║████╗  ██║██╔════╝ ██╔════╝
+--  ███████╗   ██║   ██████╔╝██║██╔██╗ ██║██║  ███╗███████╗
+--  ╚════██║   ██║   ██╔══██╗██║██║╚██╗██║██║   ██║╚════██║
+--  ███████║   ██║   ██║  ██║██║██║ ╚████║╚██████╔╝███████║
+--  ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝
+
+do
+  function Addon:MakeAtlas(atlas, height, width, hex)
+    height = tostring(height or "0")
+    local tex = "|A:" .. atlas .. ":" .. height .. ":" .. tostring(width or height)
+    if hex then
+      tex = tex .. format(":::%d:%d:%d", self:ConvertHexToRGB(hex))
+    end
+    return tex .. "|a"
+  end
+  function Addon:MakeIcon(texture, height, width, hex)
+    local tex = "|T" .. texture .. ":" .. tostring(height or "0") .. ":"
+    if width then
+      tex = tex .. width
+    end
+    if hex then
+      tex = tex .. format(":::1:1:0:1:0:1:%d:%d:%d", self:ConvertHexToRGB(hex))
+    end
+    return tex .. "|t"
+  end
+  function Addon:UnmakeIcon(texture)
+    return strMatch(texture, "|T([^:]+):")
+  end
+end
+
+
+
+
+
+--  ██╗████████╗███████╗███╗   ███╗███████╗
+--  ██║╚══██╔══╝██╔════╝████╗ ████║██╔════╝
+--  ██║   ██║   █████╗  ██╔████╔██║███████╗
+--  ██║   ██║   ██╔══╝  ██║╚██╔╝██║╚════██║
+--  ██║   ██║   ███████╗██║ ╚═╝ ██║███████║
+--  ╚═╝   ╚═╝   ╚══════╝╚═╝     ╚═╝╚══════╝
+
+do
+  local lastRangedItem
+  local function SetLastRangedItem(itemLink)
+    if itemLink then
+      lastRangedItem = strMatch(itemLink, "(item:.-)|h")
+    end
+  end
+  function Addon:GetLastRangedItem()
+    return lastRangedItem
+  end
+  
+  Addon:RegisterEnableCallback(function(self)
+    SetLastRangedItem(GetInventoryItemLink("player", INVSLOT_RANGED))
+    self:RegisterEventCallback("PLAYER_EQUIPMENT_CHANGED", function(self, e, slot)
+      if slot == INVSLOT_RANGED then
+        SetLastRangedItem(GetInventoryItemLink("player", INVSLOT_RANGED))
+      end
+    end)
+  end)
+  
+  function Addon:UnequipRangedItem()
+    if SpellIsTargeting() then return false end
+    
+    if CursorHasItem() then
+      ClearCursor()
+    end
+    if IsInventoryItemLocked(INVSLOT_RANGED) then return false end
+    PickupInventoryItem(INVSLOT_RANGED)
+    
+    if CursorHasItem() then
+      for bag = 0, NUM_BAG_SLOTS do
+        for slot = 1, C_Container.GetContainerNumSlots(bag) do
+          local containerInfo = C_Container.GetContainerItemInfo(bag, slot)
+          if not containerInfo then
+            if bag == BACKPACK_CONTAINER then
+              PutItemInBackpack()
+            else
+              PutItemInBag(slot + 19)
+            end
+            return true
+          end
+        end
+      end
+    end
+    return false
   end
 end
 
@@ -247,19 +347,52 @@ end
 --  ╚═╝      ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝
 
 do
-  local formOptions = {
-    CatForm         = "CatForm",
-    TravelForm      = "TravelForm",
-    AquaticForm     = "AquaticForm",
-    FlightForm      = "FlightForm",
+  local formOptions = setmetatable({
     SwiftFlightForm = "FlightForm",
-    
-    GhostWolf       = "GhostWolf",
-  }
+  }, {__index = function(self, k) return k end})
   
   function Addon:CanUseForm(form)
-    return self:GetOption("class", self.MY_CLASS_NAME, "useForms") and self:GetOption("class", self.MY_CLASS_NAME, "allowedForms", formOptions[form]) and IsSpellKnown(self.spells[form])
+    return self:GetOption("class", self.MY_CLASS_FILENAME, "useForms") and self:GetOption("class", self.MY_CLASS_FILENAME, "allowedForms", formOptions[form]) and IsSpellKnown(self.spells[form])
   end
+  
+  
+  
+  local auraIDs = {
+    PALADIN = {
+      DevotionAura = {
+        
+      },
+    },
+  }
+  
+  
+  local function GetAuraTable()
+    local auras = setmetatable({
+      PALADIN = {
+        -- "DevotionAura"
+        [1] = "something",
+        [2] = "something",
+        [3] = "something",
+        [4] = "something",
+        [5] = "something",
+        [6] = "something",
+        [7] = "CrusaderAura",
+      },
+    }, {__index = function() return {} end})
+  end
+  
+  local lastAura
+  local function CheckAuras()
+    
+    local auraTable = auras[Addon.MY_CLASS_FILENAME]
+    
+    local form = GetShapeshiftForm()
+  end
+  Addon:RegisterEnableCallback(function(self)
+    self:RegisterEventCallback("UPDATE_SHAPESHIFT_FORM", function()
+      
+    end)
+  end)
 end
 
 

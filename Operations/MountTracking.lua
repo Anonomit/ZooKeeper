@@ -24,6 +24,14 @@ local usableOptionsNeedsRefresh = true
 
 
 
+local function IsMountActive(mountSpellID)
+  return not not AuraUtil.FindAura(function(...)
+    local spellID = select(13, ...)
+    if spellID == mountSpellID then
+      return true
+    end
+  end, "player", "HELPFUL")
+end
 
 
 
@@ -31,10 +39,34 @@ local function RefreshAllOptions()
   wipe(allOptions)
   
   local count = 0
-  for _, i in ipairs(C_MountJournal.GetMountIDs()) do
-    local creatureName, spellID, icon, active, isUsable, sourceType, isFavorite, isFactionSpecific, faction, hideOnChar, isCollected, mountID = C_MountJournal.GetMountInfoByID(i)
-    allOptions[i] = {name = creatureName, spellID = spellID, active = active, isCollected = isCollected}
-    count = count + 1
+  if Addon.isClassic then
+    for bag = 0, NUM_BAG_SLOTS do
+      for slot = 1, C_Container.GetContainerNumSlots(bag) do
+        local containerInfo = C_Container.GetContainerItemInfo(bag, slot)
+        if containerInfo then
+          local spellName, spellID = GetItemSpell(containerInfo.itemID)
+          if spellID and Addon.mounts[spellID] then
+            Addon:SetOption(containerInfo.itemID, "discovered", spellID)
+            allOptions[spellID] = {name = GetItemInfo(containerInfo.itemID) or spellName, spellID = spellID, active = IsMountActive(spellID), isCollected = true, itemID = containerInfo.itemID, bag = bag, slot = slot}
+            count = count + 1
+          end
+        end
+      end
+    end
+    
+    for spellID in pairs(Addon.mounts) do
+      if IsSpellKnown(spellID) then
+        Addon:SetOption(true, "discovered", spellID)
+        allOptions[spellID] = {name = GetSpellInfo(spellID), spellID = spellID, active = IsMountActive(spellID), isCollected = true}
+        count = count + 1
+      end
+    end
+  else
+    for _, i in ipairs(C_MountJournal.GetMountIDs()) do
+      local creatureName, spellID, icon, active, isUsable, sourceType, isFavorite, isFactionSpecific, faction, hideOnChar, isCollected, mountID = C_MountJournal.GetMountInfoByID(i)
+      allOptions[i] = {name = creatureName, spellID = spellID, active = active, isCollected = isCollected}
+      count = count + 1
+    end
   end
   
   Addon:DebugfIfOutput("allSelected", "All mounts updated: %d found", count)
@@ -49,21 +81,41 @@ end
 
 
 local function RefreshUsableOptions()
+  AttemptRefreshAllOptions()
   wipe(usableOptions)
   
   local count = 0
-  for _, i in ipairs(C_MountJournal.GetMountIDs()) do
-    local creatureName, spellID, icon, active, isUsable, sourceType, isFavorite, isFactionSpecific, faction, hideOnChar, isCollected, mountID = C_MountJournal.GetMountInfoByID(i)
-    if isUsable then
-      usableOptions[i] = {name = creatureName, spellID = spellID, active = active}
-      count = count + 1
+  if Addon.isClassic then
+    if IsOutdoors() then
+      for k, v in pairs(allOptions) do
+        if v.itemID then
+          local containerInfo = C_Container.GetContainerItemInfo(v.bag, v.slot)
+          if containerInfo and not containerInfo.isLocked then
+            usableOptions[k] = v
+            count = count + 1
+          end
+        else
+          local usable, noMana = IsUsableSpell(v.spellID)
+          if usable or noMana then -- try to mount even if there isn't enough mana
+            usableOptions[k] = v
+            count = count + 1
+          end
+        end
+      end
+    end
+  else
+    for _, i in ipairs(C_MountJournal.GetMountIDs()) do
+      local creatureName, spellID, icon, active, isUsable, sourceType, isFavorite, isFactionSpecific, faction, hideOnChar, isCollected, mountID = C_MountJournal.GetMountInfoByID(i)
+      if isUsable then
+        usableOptions[i] = {name = creatureName, spellID = spellID, active = active}
+        count = count + 1
+      end
     end
   end
   
   Addon:DebugfIfOutput("usableSelected", "Usable mounts updated: %d found%s", count, table.concat(Addon:Map(Addon:Squish(usableOptions), function(v, k) return format("\n%d: %s", k, v.name) end), ""))
   
   usableOptionsNeedsRefresh = false
-  AttemptRefreshAllOptions()
 end
 local function AttemptRefreshUsableOptions()
   if usableOptionsNeedsRefresh then
@@ -183,7 +235,7 @@ local function RefreshIdealOptions()
   
   Addon:DebugfIfOutput("idealSelected", "Ideal mounts updated: %d found%s", #idealOptions, table.concat(Addon:Map(idealOptions, function(v, k) return format("\n%d: %s", k, usableOptions[v].name) end), ""))
   
-  if mountType == "fly" and Addon.MY_CLASS_NAME == "DRUID" then
+  if mountType == "fly" and Addon.MY_CLASS_FILENAME == "DRUID" then
     if Addon:CanUseForm"SwiftFlightForm" and (fastestSpeed <= 280 or Addon:GetOption("class", "DRUID", "alwaysPreferFlightForm")) then
       wipe(idealOptions)
       Addon:DebugfIfOutput("idealSelected", "Ideal mounts updated: %d found (using druid form instead)", #idealOptions)
@@ -276,8 +328,8 @@ function Addon:SelectMount()
       id = idealOptions[optionIndex+1]
     end
   end
-  self:DebugfIfOutput("finalSelectionMade", "Mount selected: %s (%d)", usableOptions[id].name, id)
-  return id
+  self:DebugfIfOutput("finalSelectionMade", "Mount selected: %s (%s %d)", usableOptions[id].name, usableOptions[id].itemID and "item" or "id", id)
+  return id, usableOptions[id].itemID
 end
 
 function Addon:IsFlyableRestricted()
@@ -305,18 +357,40 @@ end
 
 
 Addon:RegisterEnableCallback(function(self)
-  hooksecurefunc(C_MountJournal, "SummonByID", function(id) self:SetLastMount(id) end)
   
   self:RegisterOptionSetHandler(WipeIdealOptions)
   
-  self:RegisterEventCallback("NEW_MOUNT_ADDED",                 WipeAllOptions)
-  self:RegisterEventCallback("PLAYER_MOUNT_DISPLAY_CHANGED",    WipeAllOptions) -- when the player uses a mount
+  if self.isClassic then
+    
+    self:RegisterEventCallback("SPELL_UPDATE_USABLE",   WipeAllOptions) -- when stepping indoors or outdoors
+    self:RegisterEventCallback("SPELLS_CHANGED",        WipeAllOptions) -- used for mount spells
+    self:RegisterEventCallback("ZONE_CHANGED",          WipeAllOptions) -- used for zone-specific mounts
+    self:RegisterEventCallback("ZONE_CHANGED_NEW_AREA", WipeAllOptions) -- used for zone-specific mounts
+    self:RegisterEventCallback("ITEM_LOCK_CHANGED",     WipeUsableOptions) -- used for mounts in bag
+    self:RegisterEventCallback("BAG_UPDATE_DELAYED",    WipeAllOptions) -- used for mounts in bag
+    self:RegisterEventCallback("UNIT_AURA", function(self, e, unitID)
+      if unitID == "player" then
+        WipeAllOptions()
+      end
+    end) -- used for auras that block mounting, and mounts themselves
+    
+  else
+    
+    hooksecurefunc(C_MountJournal, "SummonByID", function(id) self:SetLastMount(id) end)
+    
+    
+    self:RegisterEventCallback("NEW_MOUNT_ADDED",                 WipeAllOptions)
+    self:RegisterEventCallback("PLAYER_MOUNT_DISPLAY_CHANGED",    WipeAllOptions) -- when the player uses a mount
+    
+    self:RegisterEventCallback("MOUNT_JOURNAL_USABILITY_CHANGED", WipeAllOptions)
+    self:RegisterEventCallback("LEARNED_SPELL_IN_TAB",            WipeAllOptions) -- for when a new shapeshift is learned
+    
+    -- self:RegisterEventCallback("MOUNT_JOURNAL_USABILITY_CHANGED", WipeUsableOptions)
+    -- self:RegisterEventCallback("LEARNED_SPELL_IN_TAB",            WipeUsableOptions) -- for when a new shapeshift is learned
+    
+  end
   
-  self:RegisterEventCallback("MOUNT_JOURNAL_USABILITY_CHANGED", WipeAllOptions)
-  self:RegisterEventCallback("LEARNED_SPELL_IN_TAB",            WipeAllOptions) -- for when a new shapeshift is learned
-  
-  -- self:RegisterEventCallback("MOUNT_JOURNAL_USABILITY_CHANGED", WipeUsableOptions)
-  -- self:RegisterEventCallback("LEARNED_SPELL_IN_TAB",            WipeUsableOptions) -- for when a new shapeshift is learned
+  AttemptRefreshAllOptions()
 end)
 
 
@@ -327,14 +401,18 @@ end)
 
 -- debug
 if Addon:IsDebugEnabled() then
-  function Addon:GetUsableOptions()
-    AttemptRefreshUsableOptions()
-    return usableOptions
-  end
-  function Addon:GetIdealOptions()
-    AttemptRefreshIdealOptions()
-    return idealOptions
-  end
+  -- function Addon:GetAllOptions()
+  --   AttemptRefreshAllOptions()
+  --   return allOptions
+  -- end
+  -- function Addon:GetUsableOptions()
+  --   AttemptRefreshUsableOptions()
+  --   return usableOptions
+  -- end
+  -- function Addon:GetIdealOptions()
+  --   AttemptRefreshIdealOptions()
+  --   return idealOptions
+  -- end
 end
 
 

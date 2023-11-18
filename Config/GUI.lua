@@ -18,11 +18,11 @@ do
   
   local dbType = ""
   -- local GetFunction      = function(keys) local funcName = format("Get%sOption",   dbType) return function(info)      local val = Addon[funcName](Addon, unpack(keys)) Addon:Assert(val ~= nil, "[Warning] Checkbox value is nil: " .. tblConcat(keys, " > ")) return val end end
-  local GetFunction      = function(keys) local funcName = format("Get%sOption",   dbType) return function(info)      return Addon[funcName](Addon, unpack(keys))      end end
-  local SetFunction      = function(keys) local funcName = format("Set%sOption",   dbType) return function(info, val)        Addon[funcName](Addon, val, unpack(keys)) end end
-  local ResetFunction    = function(keys) local funcName = format("Reset%sOption", dbType) return function(info, val)        Addon[funcName](Addon, unpack(keys))      end end
-  local GetColorFunction = function(keys) local funcName = format("Get%sOption",   dbType) return function(info)          return Addon:ConvertColorToBlizzard(Addon[funcName](Addon, unpack(keys)))            end end
-  local SetColorFunction = function(keys) local funcName = format("Set%sOption",   dbType) return function(info, r, g, b)        Addon[funcName](Addon, Addon:ConvertColorFromBlizzard(r, g, b), unpack(keys)) end end
+  local GetFunction      = function(keys) local funcName = format("Get%sOption",         dbType) return function(info)      return Addon[funcName](Addon, unpack(keys))      end end
+  local SetFunction      = function(keys) local funcName = format("Set%sOptionConfig",   dbType) return function(info, val)        Addon[funcName](Addon, val, unpack(keys)) end end
+  local ResetFunction    = function(keys) local funcName = format("Reset%sOptionConfig", dbType) return function(info, val)        Addon[funcName](Addon, unpack(keys))      end end
+  local GetColorFunction = function(keys) local funcName = format("Get%sOption",         dbType) return function(info)          return Addon:ConvertColorToBlizzard(Addon[funcName](Addon, unpack(keys)))            end end
+  local SetColorFunction = function(keys) local funcName = format("Set%sOptionConfig",   dbType) return function(info, r, g, b)        Addon[funcName](Addon, Addon:ConvertColorFromBlizzard(r, g, b), unpack(keys)) end end
   
   function GUI:SetDBType(typ)
     dbType = typ or ""
@@ -140,7 +140,7 @@ do
   end
   function GUI:CreateGroupBox(opts, name)
     local key = self:Order(-1)
-    local option = self:CreateGroup(opts, key, name or "")
+    local option = self:CreateGroup(opts, key, name or " ")
     option.inline = true
     return option
   end

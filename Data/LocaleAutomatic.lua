@@ -60,6 +60,8 @@ L["Clear Cache"]                  = BROWSER_CLEAR_CACHE
 
 L["Mounts"]     = MOUNTS
 L["Companions"] = COMPANIONS
+L["Favorites"]  = FAVORITES
+L["Remove"]     = REMOVE
 
 L["Class"] = CLASS
 
@@ -73,8 +75,6 @@ L["Use Item"] = USE_ITEM
 L["Legendaries"] = LOOT_JOURNAL_LEGENDARIES
 
 L["Preferences"]   = PREFERENCES
-L["Shapeshifting"] = TUTORIAL_TITLE61_DRUID
-
 
 
 

@@ -181,7 +181,7 @@ function Addon:SelectCritter()
       id = idealOptions[optionIndex+1]
     end
   end
-  self:DebugfIfOutput("finalSelectionMade", "Critter selected: %s (%d)", usableOptions[id].name, id)
+  self:DebugfIfOutput("finalSelectionMade", "Critter selected: %s (%s)", usableOptions[id].name, id)
   return id
 end
 
@@ -190,19 +190,21 @@ end
 
 
 Addon:RegisterEnableCallback(function(self)
-  hooksecurefunc(C_PetJournal, "SummonPetByGUID", function(id) self:SetLastCritter(id) end)
-  
-  self:RegisterOptionSetHandler(WipeIdealPets)
-  
-  self:RegisterEventCallback("NEW_PET_ADDED",           WipeUsableOptions)
-  self:RegisterEventCallback("PET_JOURNAL_LIST_UPDATE", WipeUsableOptions)
-  
-  -- fires for other players too
-  self:RegisterEventCallback("COMPANION_UPDATE", function(self, event, category)
-    if category == "CRITTER" then
-      WipeUsableOptions()
-    end
-  end)
+  if not self.isClassic then
+    hooksecurefunc(C_PetJournal, "SummonPetByGUID", function(id) self:SetLastCritter(id) end)
+    
+    self:RegisterOptionSetHandler(WipeIdealPets)
+    
+    self:RegisterEventCallback("NEW_PET_ADDED",           WipeUsableOptions)
+    self:RegisterEventCallback("PET_JOURNAL_LIST_UPDATE", WipeUsableOptions)
+    
+    -- fires for other players too
+    self:RegisterEventCallback("COMPANION_UPDATE", function(self, event, category)
+      if category == "CRITTER" then
+        WipeUsableOptions()
+      end
+    end)
+  end
 end)
 
 
@@ -213,12 +215,18 @@ end)
 
 -- debug
 if Addon:IsDebugEnabled() then
-  function Addon:GetUsableOptions()
-    return usableOptions
-  end
-  function Addon:GetIdealOptions()
-    return idealOptions
-  end
+  -- function Addon:GetAllOptions()
+  --   RefreshAllOptions()
+  --   return allOptions
+  -- end
+  -- function Addon:GetUsableOptions()
+  --   AttemptRefreshUsableOptions()
+  --   return usableOptions
+  -- end
+  -- function Addon:GetIdealOptions()
+  --   RefreshIdealOptions()
+  --   return idealOptions
+  -- end
 end
 
 

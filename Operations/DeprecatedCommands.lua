@@ -19,6 +19,15 @@ StaticPopupDialogs["ZOOKEEPER_DEPRECATED_SLASH_COMMAND"] =
     hideOnEscape = 1,
 };
 
+StaticPopupDialogs["ZOOKEEPER_COMMAND_NOT_SUPPORT_IN_VERSION"] =
+{
+    text         = L["The command|n|cff00ccff%s|r|nis not available in %s."],
+    button1      = OKAY,
+    timeout      = 0,
+    whileDead    = 1,
+    hideOnEscape = 1,
+};
+
 
 local function GetMountCommandString()
   return L["Use |cff00ccff/click ZKM|r instead.|n(ZooKeeper Mount)"]

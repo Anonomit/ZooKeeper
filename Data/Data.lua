@@ -17,7 +17,7 @@ local Addon = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 --   ╚═════╝╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚══════╝
 
 do
-  Addon.MY_CLASS_NAME, Addon.MY_CLASS = UnitClassBase"player"
+  Addon.MY_CLASS_LOCALNAME, Addon.MY_CLASS_FILENAME, Addon.MY_CLASS_ID = UnitClass"player"
 end
 
 
@@ -74,43 +74,52 @@ end
 --  ╚═╝   ╚═╝   ╚══════╝╚═╝     ╚═╝╚══════╝
 
 do
-  Addon.blackenedUrnQuality = nil
-  
   Addon.itemsByCategory = {
-    -- ["Molten Core"] = {
-    --   EternalQuintessence = 22754,
-    --   AqualQuintessence   = 17333,
-    -- },
-    -- Karazhan = {
-    --   BlackenedUrn = 24140,
-    -- },
-    -- ["Serpentshrine Cavern"] = {
-    --   TaintedCore = 31088,
-    -- },
-    -- ["The Eye"] = {
-    --   StaffOfDisintegration = 30313,
-    --   NetherstrandLongbow   = 30318,
-    --   WarpSlicer            = 30311,
-    --   Devastation           = 30316,
-    --   CosmicInfuser         = 30317,
-    --   InfinityBlade         = 30312,
-    --   PhaseshiftBulwark     = 30314,
-    -- },
-    -- ["Battle for Mount Hyjal"] = {
-    --   TearsOfTheGoddess = 24494,
-    -- },
-    -- ["Black Temple"] = {
-    --   NajentusSpine = 32408,
-    -- },
-    Oculus = {
-      EmeraldEssence = 37815,
-      AmberEssence   = 37859,
-      RubyEssence    = 37860,
-    },
-    ["Icecrown Citadel"] = {
-      GoblinRocketPack = 49278,
+    ["Molten Core"] = {
+      EternalQuintessence = 22754,
+      AqualQuintessence   = 17333,
     },
   }
+  
+  if Addon.expansionLevel >= Addon.expansions.tbc then
+    Addon:Concatenate(Addon.itemsByCategory, {
+      Karazhan = {
+        BlackenedUrn = 24140,
+      },
+      ["Serpentshrine Cavern"] = {
+        TaintedCore = 31088,
+      },
+      ["The Eye"] = {
+        StaffOfDisintegration = 30313,
+        NetherstrandLongbow   = 30318,
+        WarpSlicer            = 30311,
+        Devastation           = 30316,
+        CosmicInfuser         = 30317,
+        InfinityBlade         = 30312,
+        PhaseshiftBulwark     = 30314,
+      },
+      ["Battle for Mount Hyjal"] = {
+        TearsOfTheGoddess = 24494,
+      },
+      ["Black Temple"] = {
+        NajentusSpine = 32408,
+      },
+    })
+  end
+  
+  if Addon.expansionLevel >= Addon.expansions.wrath then
+    Addon:Concatenate(Addon.itemsByCategory, {
+      Oculus = {
+        EmeraldEssence = 37815,
+        AmberEssence   = 37859,
+        RubyEssence    = 37860,
+      },
+      ["Icecrown Citadel"] = {
+        GoblinRocketPack = 49278,
+      },
+    })
+  end
+  
   
   local items = {}
   local function Flatten(t)
@@ -128,19 +137,12 @@ do
   local function QueryItemName(key)
     local itemID = items[key] or key
     local name = GetItemInfo(itemID)
-    -- if itemID == Addon.itemsByCategory.Karazhan.BlackenedUrn then
-    --   Addon.blackenedUrnQuality = select(3, GetItemInfo(itemID))
-    -- end
     if not name then
       if not queries[itemID] then
         queries[itemID] = Addon:RegisterEventCallback("GET_ITEM_INFO_RECEIVED", function(_, id)
           if id == itemID then
             name = GetItemInfo(itemID)
             if name then
-              -- if itemID == Addon.itemsByCategory.Karazhan.BlackenedUrn then
-              --   Addon.blackenedUrnQuality = select(3, GetItemInfo(itemID))
-              -- end
-              
               Addon.itemNames[key] = name
               Addon:UnregisterEventCallbacks("GET_ITEM_INFO_RECEIVED", queries[itemID])
             end
@@ -153,10 +155,21 @@ do
   
   Addon.itemNames = setmetatable({}, {__index = function(self, k) self[k] = QueryItemName(k) return rawget(self, k) or k end})
   
-  for key in pairs(items) do
-    nop(Addon.itemNames[key])
-  end
-  
+  Addon:RegisterEnableCallback(function()
+    local ticker
+    ticker = C_Timer.NewTicker(1, function()
+      local found
+      for key in pairs(items) do
+        if not rawget(Addon.itemNames, key) then
+          nop(Addon.itemNames[key])
+          found = true
+        end
+      end
+      if not found then
+        ticker:Cancel()
+      end
+    end)
+  end)
 end
 
 
@@ -176,11 +189,11 @@ end
 do
   Addon.shapeshiftFormIDs = {
     --Druid
+    [1]  = true, -- Cat Form
     [2]  = true, -- Tree Of Life
     [3]  = true, -- Travel Form
     [4]  = true, -- Aquatic Form
     [5]  = true, -- Bear Form
-    [1]  = true, -- Cat Form
     [27] = true, -- Swift Flight Form
     [29] = true, -- Flight Form
     [31] = true, -- Moonkin Form
@@ -215,23 +228,45 @@ do
         CatForm         = 768,
         TravelForm      = 783,
         AquaticForm     = 1066,
-        FlightForm      = 33943,
-        SwiftFlightForm = 40120,
       },
       nonMounts = {
         -- Druid shapeshift forms
         BearForm     = 5487,
         DireBearForm = 9634,
         MoonkinForm  = 24858,
-        TreeOfLife   = 33891,
       },
     },
     SHAMAN = {
       mounts = {
         GhostWolf = 2645,
       },
-    }
+    },
+    PALADIN = {
+      mounts = {},
+    },
+    HUNTER = {
+      mounts = {
+        AspectOfTheCheetah = 5118,
+        AspectOfThePack    = 13159,
+      },
+    },
   }
+  
+  if Addon.expansionLevel >= Addon.expansions.tbc then
+    Addon:Concatenate(Addon.spellsByCategory.DRUID.mounts, {
+      FlightForm      = 33943,
+      SwiftFlightForm = 40120,
+    })
+    Addon:Concatenate(Addon.spellsByCategory.DRUID.nonMounts, {
+      TreeOfLife   = 33891,
+    })
+  end
+  
+  if Addon.expansionLevel >= Addon.expansions.wrath then
+    Addon:Concatenate(Addon.spellsByCategory.PALADIN.mounts, {
+      CrusaderAura = 32223,
+    })
+  end
   
   Addon.spells = {}
   local function Flatten(t)
@@ -245,11 +280,39 @@ do
   end
   Flatten(Addon.spellsByCategory)
   
-  Addon.spellNames = setmetatable({}, {__index = function(self, k) self[k] = GetSpellInfo(Addon.spells[k] or k) or "?" return self[k] end})
+  Addon.spellNames = setmetatable({}, {__index = function(self, k) self[k] = GetSpellInfo(Addon.spells[k] or k) return rawget(self, k) or "?" end})
   
-  for key in pairs(Addon.spells) do
-    nop(Addon.spellNames[key])
-  end
+  Addon:RegisterEnableCallback(function()
+    for k, v in pairs(Addon:GetOptionT"discovered") do
+      Addon.spells[k] = k
+    end
+    
+    local ticker
+    ticker = C_Timer.NewTicker(1, function()
+      local found
+      for key in pairs(Addon.spells) do
+        if not rawget(Addon.spellNames, key) then
+          nop(Addon.spellNames[key])
+          found = true
+        end
+      end
+      if not found then
+        ticker:Cancel()
+      end
+    end)
+  end)
+  
+  
+  
+  Addon.talents = {
+    ImprovedGhostWolf = {2, 3},
+    FeralSwiftness    = Addon.isClassic and {2, 13} or {2, 12},
+  }
+  Addon.talentRanks = {
+    ImprovedGhostWolf = 2,
+    FeralSwiftness    = 1,
+  }
+  
 end
 
 
@@ -290,30 +353,30 @@ do
   --]]
   
   Addon.mounts = {
-    [458] = {284, 2, 0, 60, 0, 0},
-    [459] = {4268, 2, 64, 60, 0, 0},
-    [468] = {305, 2, 64, 60, 0, 0},
-    [470] = {308, 2, 0, 60, 0, 0},
-    [471] = {306, 0, nil, 60, 0, 0},
-    [472] = {307, 2, 0, 60, 0, 0},
-    [578] = {356, 2, 64, 60, 0, 0},
-    [579] = {4270, 2, 64, 100, 0, 0},
-    [580] = {358, 2, 0, 60, 0, 0},
-    [581] = {359, 2, 64, 60, 0, 0},
-    [3363] = {16597, 1, nil, 100, 310, 0},
-    [5784] = {304, 2, 0, 60, 0, 0},
-    [6648] = {4269, 2, 0, 60, 0, 0},
-    [6653] = {4271, 2, 0, 60, 0, 0},
-    [6654] = {4272, 2, 0, 60, 0, 0},
-    [6777] = {4710, 2, 0, 60, 0, 0},
-    [6896] = {4780, 2, 64, 60, 0, 0},
-    [6897] = {4778, 2, nil, 60, 0, 0},
-    [6898] = {4777, 2, 0, 60, 0, 0},
-    [6899] = {4779, 2, 0, 60, 0, 0},
-    [8394] = {6074, 2, 0, 60, 0, 0},
-    [8395] = {6075, 2, 0, 60, 0, 0},
-    [8396] = {6076, 2, nil, 0, 0, 0},
-    [8980] = {6486, 0, 64, 60, 0, 0},
+    [458]   = {284, 2, 0, 60, 0, 0},
+    [459]   = {4268, 2, 64, 60, 0, 0},
+    [468]   = {305, 2, 64, 60, 0, 0},
+    [470]   = {308, 2, 0, 60, 0, 0},
+    [471]   = {306, 0, nil, 60, 0, 0},
+    [472]   = {307, 2, 0, 60, 0, 0},
+    [578]   = {356, 2, 64, 60, 0, 0},
+    [579]   = {4270, 2, 64, 100, 0, 0},
+    [580]   = {358, 2, 0, 60, 0, 0},
+    [581]   = {359, 2, 64, 60, 0, 0},
+    [3363]  = {16597, 1, nil, 100, 310, 0},
+    [5784]  = {304, 2, 0, 60, 0, 0},
+    [6648]  = {4269, 2, 0, 60, 0, 0},
+    [6653]  = {4271, 2, 0, 60, 0, 0},
+    [6654]  = {4272, 2, 0, 60, 0, 0},
+    [6777]  = {4710, 2, 0, 60, 0, 0},
+    [6896]  = {4780, 2, 64, 60, 0, 0},
+    [6897]  = {4778, 2, nil, 60, 0, 0},
+    [6898]  = {4777, 2, 0, 60, 0, 0},
+    [6899]  = {4779, 2, 0, 60, 0, 0},
+    [8394]  = {6074, 2, 0, 60, 0, 0},
+    [8395]  = {6075, 2, 0, 60, 0, 0},
+    [8396]  = {6076, 2, nil, 0, 0, 0},
+    [8980]  = {6486, 0, 64, 60, 0, 0},
     [10787] = {7322, 2, nil, 60, 0, 0},
     [10788] = {7684, 0, nil, 60, 0, 0},
     [10789] = {7687, 2, 0, 60, 0, 0},
@@ -687,7 +750,7 @@ do
     [76153] = {40625, 1, nil, 100, 310, 0},
     [76154] = {40725, 3, nil, 100, 310, 0},
     
-    -- TODO: entirely new mounts are missing creature IDs: GetCompanionInfo(PetPaperDollFrameCompanionFrame.mode, selected)
+    -- entirely new mounts are missing creature IDs: GetCompanionInfo(PetPaperDollFrameCompanionFrame.mode, selected)
     [348459] = {1, 2, 0, 0, {150, 280}, 0}, -- Reawakened Phase-Hunter
     [372677] = {1, 4, 0, {60, 100}, {150, 280}, 0}, -- Kalu'ak Whalebone Glider
     [394209] = {1, 4, 0, {60, 100}, {150, 280, 310}}, -- Festering Emerald Drake
@@ -725,32 +788,34 @@ do
   
   
   -- collections log update has made mounts depend on riding skill. 410 speed mounts appear to be not affected
-  for id, data in pairs(Addon.mounts) do
-    local groundSpeeds, flightSpeeds, swimSpeeds = data[4], data[5], data[6]
-    
-    if flightSpeeds == 150 then
-      flightSpeeds = {150, 280}
-    elseif type(flightSpeeds) == "table" then
-      for i, speed in ipairs(flightSpeeds) do
-        if speed == 150 and flightSpeeds[i+1] ~= 280 then
-          tinsert(flightSpeeds, i, 280)
-          break
+  if not Addon.isClassic then
+    for id, data in pairs(Addon.mounts) do
+      local groundSpeeds, flightSpeeds, swimSpeeds = data[4], data[5], data[6]
+      
+      if flightSpeeds == 150 then
+        flightSpeeds = {150, 280}
+      elseif type(flightSpeeds) == "table" then
+        for i, speed in ipairs(flightSpeeds) do
+          if speed == 150 and flightSpeeds[i+1] ~= 280 then
+            tinsert(flightSpeeds, i, 280)
+            break
+          end
         end
       end
-    end
-    if groundSpeeds == 60 then
-      groundSpeeds = {60, 100}
-    elseif type(groundSpeeds) == "table" then
-      for i, speed in ipairs(groundSpeeds) do
-        if speed == 60 and groundSpeeds[i+1] ~= 100 then
-          tinsert(groundSpeeds, i, 100)
-          break
+      if groundSpeeds == 60 then
+        groundSpeeds = {60, 100}
+      elseif type(groundSpeeds) == "table" then
+        for i, speed in ipairs(groundSpeeds) do
+          if speed == 60 and groundSpeeds[i+1] ~= 100 then
+            tinsert(groundSpeeds, i, 100)
+            break
+          end
         end
       end
+      data[4] = groundSpeeds
+      data[5] = flightSpeeds
+      data[6] = swimSpeeds
     end
-    data[4] = groundSpeeds
-    data[5] = flightSpeeds
-    data[6] = swimSpeeds
   end
   
   

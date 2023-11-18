@@ -271,12 +271,20 @@ do
     return DeepCopy(val, {})
   end
   
+  local function NotifyChange()
+    Addon:xpcall(function()
+      if Addon.AceConfigRegistry then
+        Addon.AceConfigRegistry:NotifyChange(ADDON_NAME)
+      end
+    end)
+  end
+  
   local onOptionSetHandlers = {}
   function Addon:RegisterOptionSetHandler(func)
     tinsert(onOptionSetHandlers, func)
     return #onOptionSetHandlers
   end
-  function Addon:UnrgisterOptionSetHandler(id)
+  function Addon:UnregisterOptionSetHandler(id)
     onOptionSetHandlers[id] = nil
   end
   
@@ -323,16 +331,22 @@ do
     for _, dbSection in ipairs(dbTypes) do
       local typeKey, typeName = unpack(dbSection, 1, 2)
       
-      local GetOption        = format("Get%s%sOption", dbName, typeName)
-      local GetDefaultOption = format("Get%s%sOption", defaultName, typeName)
+      local GetOptionT       = format("Get%s%sOptionT", dbName,      typeName)
+      local GetOption        = format("Get%s%sOption",  dbName,      typeName)
+      local GetDefaultOption = format("Get%s%sOption",  defaultName, typeName)
       
-      Addon[GetOption] = function(self, ...)
+      Addon[GetOptionT] = function(self, ...)
         assert(self[dbKey], format("Attempted to access database before initialization: %s", tblConcat({dbKey, typeKey, ...}, " > ")))
         local val = self[dbKey][typeKey]
         for _, key in ipairs{...} do
           assert(type(val) == "table", format("Bad database access: %s", tblConcat({dbKey, typeKey, ...}, " > ")))
           val = val[key]
         end
+        return val
+      end
+      
+      Addon[GetOption] = function(self, ...)
+        local val = Addon[GetOptionT](self, ...)
         if type(val) == "table" then
           self:Debugf("[Warning] Database request returned a table: %s", tblConcat({dbKey, typeKey, ...}, " > "))
         end
@@ -340,11 +354,14 @@ do
       end
       
       if not isDefault then
-        local SetOption    = format("Set%s%sOption",    dbName, typeName)
-        local ToggleOption = format("Toggle%s%sOption", dbName, typeName)
-        local ResetOption  = format("Reset%s%sOption",  dbName, typeName)
+        local SetOptionConfig    = format("Set%s%sOptionConfig",    dbName, typeName)
+        local SetOption          = format("Set%s%sOption",          dbName, typeName)
+        local ToggleOptionConfig = format("Toggle%s%sOptionConfig", dbName, typeName)
+        local ToggleOption       = format("Toggle%s%sOption",       dbName, typeName)
+        local ResetOptionConfig  = format("Reset%s%sOptionConfig",  dbName, typeName)
+        local ResetOption        = format("Reset%s%sOption",        dbName, typeName)
       
-        Addon[SetOption] = function(self, val, ...)
+        Addon[SetOptionConfig] = function(self, val, ...)
           assert(self[dbKey], format("Attempted to access database before initialization: %s = %s", tblConcat({dbKey, typeKey, ...}, " > "), tostring(val)))
           local keys = {...}
           local lastKey = tblRemove(keys, #keys)
@@ -353,8 +370,23 @@ do
             assert(type(tbl[key]) == "table", format("Bad database access: %s = %s", tblConcat({dbKey, typeKey, ...}, " > "), tostring(val)))
             tbl = tbl[key]
           end
+          local lastVal = tbl[lastKey]
+          if type(lastVal) == "table" then
+            self:Debugf("[Warning] Database access overwriting a table: %s", tblConcat({dbKey, typeKey, ...}, " > "))
+          end
           tbl[lastKey] = val
           OnOptionSet(Addon, val, dbKey, typeKey, ...)
+          return lastVal ~= val
+        end
+      
+        Addon[SetOption] = function(self, val, ...)
+          local result = Addon[SetOptionConfig](self, val, ...)
+          NotifyChange()
+          return result
+        end
+        
+        Addon[ToggleOptionConfig] = function(self, ...)
+          return self[SetOptionConfig](self, not self[GetOption](self, ...), ...)
         end
         
         Addon[ToggleOption] = function(self, ...)
@@ -364,10 +396,23 @@ do
         Addon[ResetOption] = function(self, ...)
           return self[SetOption](self, Addon.Copy(self, self[GetDefaultOption](self, ...)), ...)
         end
+        
+        Addon[ResetOptionConfig] = function(self, ...)
+          return self[SetOptionConfig](self, Addon.Copy(self, self[GetDefaultOption](self, ...)), ...)
+        end
       end
       
     end
   end
+  
+  
+  -- Addon:RegisterOptionSetHandler(function(self, val, ...)
+  --   self:xpcall(function()
+  --     if self.AceConfigRegistry then
+  --       self.AceConfigRegistry:NotifyChange(ADDON_NAME)
+  --     end
+  --   end)
+  -- end)
 end
 
 
@@ -851,7 +896,7 @@ do
   end
   
   function Addon:Squish(t)
-    local new = { }
+    local new = {}
     for k in pairs(t) do
       tinsert(new, k)
     end
@@ -892,8 +937,26 @@ do
     end
     return new
   end
+
+  
+  function Addon:Concatenate(t1, t2)
+    for _, v in ipairs(t2) do
+      t1[#t1+1] = v
+    end
+    for k, v in pairs(t2) do
+      if type(k) ~= "number" then
+        t1[k] = v
+      end
+    end
+  end
   
   function Addon:Random(t)
     return t[random(#t)]
+  end
+  
+  
+  function Addon:Switch(val, t, fallback)
+    assert(val)
+    return setmetatable(t, {__index = function() return fallback or nop end})[val]()
   end
 end
