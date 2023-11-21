@@ -145,7 +145,7 @@ local function MakeBehaviorOptions(opts, categoryName)
         disabled = true
       end
     end)
-    GUI:CreateToggle(opts, {"behavior", "hideErrorMessages"}, L["Hide shapeshift error messages"], L["Hides the red messages that can happen when you're unable to use an ability."], disabled).width = 1.5
+    GUI:CreateToggle(opts, {"behavior", "hideErrorMessages"}, L["Hide some error messages"], L["Hides the red messages that can happen when you're unable to use an ability."], disabled).width = 1.5
     if disabled then
       GUI:CreateDescription(opts, Addon:MakeColorCode(Addon:GetHexFromColor(255,  32,  32), L["(Not compatible with ErrorFilter)"]), "small")
     end
@@ -174,19 +174,58 @@ local function MakeClassOptions(opts, categoryName)
   
   local opts = GUI:CreateGroup(opts, categoryName, categoryName)
     
-  local function MakeFormOptions(opts, className, classFilename, forms)
-    GUI:CreateToggle(opts, {"class", classFilename, "useForms"}, self.L["Enable"], format(L["Use %s class spells."], className))
-    -- GUI:CreateNewline(opts)
+  local function MakeClassOptionsSection(opts, className, classFilename, optionsType, options)
+    local title = Addon:Switch(optionsType, {
+      forms  = function() return L["Use %s spells"] end,
+      mounts = function() return L["Use %s mounts"] end,
+    })
+    local desc = Addon:Switch(optionsType, {
+      forms  = function() return L["Use |cff00ccff%s|r class spells when appropriate."] end,
+      mounts = function() return L["Use |cff00ccff%s|r class mounts when appropriate."] end,
+    })
+    local enableToggle = Addon:Switch(optionsType, {
+      forms  = function() return "useForms"  end,
+      mounts = function() return "useMounts" end,
+    })
+    local allowedToggle = Addon:Switch(optionsType, {
+      forms  = function() return "allowedForms"  end,
+      mounts = function() return "allowedMounts" end,
+    })
+    
+    GUI:CreateToggle(opts, {"class", classFilename, enableToggle}, format(title, className), format(desc, className))
     
     do
       local opts = GUI:CreateGroupBox(opts)
       
-      local disabled = not Addon:GetOption("class", classFilename, "useForms")
+      local disabled = not Addon:GetOption("class", classFilename, enableToggle)
+      for i, option in ipairs(options) do
+        if i ~= 1 then
+          GUI:CreateNewline(opts)
+        end
+        
+        local spellID = Addon.spells[option]
+        local text = self.spellNames[option]
+        local icon = select(3, GetSpellInfo(spellID))
+        if icon then
+          text = self:MakeIcon(icon) .. " " .. text
+        end
+        GUI:CreateToggle(opts, {"class", classFilename, allowedToggle, option}, text, format(L["Use |cff00ccff%s|r when appropriate."], Addon.spellNames[option]), disabled).tooltipHyperlink = "spell:" .. spellID
+      end
+    end
+  end
+    
+  local function MakeMountOptions(opts, className, classFilename, options)
+    GUI:CreateToggle(opts, {"class", classFilename, "useMounts"}, self.L["Use %s mounts"], format(L["Use %s class mounts when appropriate."], className))
+    
+    do
+      local opts = GUI:CreateGroupBox(opts)
+      
+      local disabled = not Addon:GetOption("class", classFilename, "useMounts")
       for i, form in ipairs(forms) do
         if i ~= 1 then
           GUI:CreateNewline(opts)
         end
-        GUI:CreateToggle(opts, {"class", classFilename, "allowedForms", form}, Addon.spellNames[form], format(L["Use |cff00ccff%s|r when appropriate."], Addon.spellNames[form]), disabled)
+        GUI:CreateToggle(opts, {"class", classFilename, "allowedMounts", form}, Addon.spellNames[form], format(L["Use |cff00ccff%s|r when appropriate."], Addon.spellNames[form]), disabled)
       end
     end
   end
@@ -201,7 +240,7 @@ local function MakeClassOptions(opts, categoryName)
       
       local opts = GUI:CreateGroup(opts, classFilename, className)
       
-      MakeFormOptions(opts, className, classFilename, Addon:Squish{
+      MakeClassOptionsSection(opts, className, classFilename, "forms", Addon:Squish{
         "CatForm",
         "AquaticForm",
         "TravelForm",
@@ -231,13 +270,13 @@ local function MakeClassOptions(opts, categoryName)
       
       local opts = GUI:CreateGroup(opts, classFilename, className)
       
-      MakeFormOptions(opts, className, classFilename, {
+      MakeClassOptionsSection(opts, className, classFilename, "forms", {
         "GhostWolf",
       })
     end
   end
   
-  if not Addon.isClassic then
+  do
     local classID = 2 -- Paladin
     
     classMenus[classID] = function()
@@ -245,9 +284,16 @@ local function MakeClassOptions(opts, categoryName)
       
       local opts = GUI:CreateGroup(opts, classFilename, className)
       
-      MakeFormOptions(opts, className, classFilename, {
-        "CrusaderAura",
-      })
+      if Addon.isClassic then
+        MakeClassOptionsSection(opts, className, classFilename, "mounts", {
+          "Warhorse",
+          "Charger",
+        })
+      else
+        MakeClassOptionsSection(opts, className, classFilename, "forms", {
+          "CrusaderAura",
+        })
+      end
     end
   end
   
@@ -259,9 +305,24 @@ local function MakeClassOptions(opts, categoryName)
       
       local opts = GUI:CreateGroup(opts, classFilename, className)
       
-      MakeFormOptions(opts, className, classFilename, {
+      MakeClassOptionsSection(opts, className, classFilename, "forms", {
         "AspectOfTheCheetah",
         "AspectOfThePack",
+      })
+    end
+  end
+  
+  if Addon.isClassic then
+    local classID = 9 -- Warlock
+    
+    classMenus[classID] = function()
+      local className, classFilename = GetClassInfo(classID)
+      
+      local opts = GUI:CreateGroup(opts, classFilename, className)
+      
+      MakeClassOptionsSection(opts, className, classFilename, "mounts", {
+        "Felsteed",
+        "Dreadsteed",
       })
     end
   end
@@ -312,18 +373,14 @@ local function MakeZoneOptions(opts, categoryName)
       local zone = "Oculus"
       local opts = GUI:CreateGroup(opts, zone, zone)
       
-      local dragonNames = {}
-      for k, v in pairs(Addon.itemsByCategory.Oculus) do
-        tinsert(dragonNames, Addon.itemNames[k])
-      end
-      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, L["Dragon mounts"], format(L["Use |cff00ccff%s|r when available."], tblConcat(dragonNames, "|r,|cff00ccff ")))
+      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, L["Dragon mounts"]).tooltipHyperlink = "item:" .. Addon.items[Addon:Cycle(Addon.itemsByCategory.Oculus)]
     end
     
     do
       local zone = "Icecrown Citadel"
       local opts = GUI:CreateGroup(opts, zone, zone)
       
-      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, Addon.itemNames.GoblinRocketPack, format(L["Use |cff00ccff%s|r when available."], Addon.itemNames.GoblinRocketPack))
+      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, Addon:InsertItemIcon"GoblinRocketPack").tooltipHyperlink = "item:" .. Addon.items.GoblinRocketPack
       GUI:CreateNewline(opts)
       
       local disabled = not Addon:GetOption("zone", zone, "useZoneItems")
@@ -338,14 +395,14 @@ local function MakeZoneOptions(opts, categoryName)
       local zone = "Karazhan"
       local opts = GUI:CreateGroup(opts, zone, zone)
       
-      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, Addon.itemNames.BlackenedUrn, format(L["Use |cff00ccff%s|r when available."], Addon.itemNames.BlackenedUrn))
+      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, Addon:InsertItemIcon"BlackenedUrn").tooltipHyperlink = "item:" .. Addon.items.BlackenedUrn
     end
     
     do
       local zone = "Serpentshrine Cavern"
       local opts = GUI:CreateGroup(opts, zone, zone)
       
-      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, Addon.itemNames.TaintedCore, format(L["Use |cff00ccff%s|r when available."], Addon.itemNames.TaintedCore))
+      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, Addon:InsertItemIcon"TaintedCore").tooltipHyperlink = "item:" .. Addon.items.TaintedCore
     end
     
     do
@@ -367,7 +424,7 @@ local function MakeZoneOptions(opts, categoryName)
           "InfinityBlade",
           "PhaseshiftBulwark",
         } do
-          GUI:CreateToggle(opts, {"zone", zone, item}, Addon.itemNames[item], format(L["Use |cff00ccff%s|r when available."], Addon.itemNames[item]), disabled)
+          GUI:CreateToggle(opts, {"zone", zone, item}, Addon:InsertItemIcon(item), nil, disabled).tooltipHyperlink = "item:" .. Addon.items[item]
         end
       end
     end
@@ -376,14 +433,14 @@ local function MakeZoneOptions(opts, categoryName)
       local zone = "Battle for Mount Hyjal"
       local opts = GUI:CreateGroup(opts, zone, zone)
       
-      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, Addon.itemNames.TearsOfTheGoddess, format(L["Use |cff00ccff%s|r when available."], Addon.itemNames.TearsOfTheGoddess))
+      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, Addon:InsertItemIcon"TearsOfTheGoddess").tooltipHyperlink = "item:" .. Addon.items.TearsOfTheGoddess
     end
     
     do
       local zone = "Black Temple"
       local opts = GUI:CreateGroup(opts, zone, zone)
       
-      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, Addon.itemNames.NajentusSpine, format(L["Use |cff00ccff%s|r when available."], Addon.itemNames.NajentusSpine))
+      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, Addon:InsertItemIcon"NajentusSpine").tooltipHyperlink = "item:" .. Addon.items.NajentusSpine
     end
   end
   
@@ -403,9 +460,9 @@ local function MakeZoneOptions(opts, categoryName)
         local opts = GUI:CreateGroupBox(opts)
         
         local disabled = not Addon:GetOption("zone", zone, "useZoneItems")
-        GUI:CreateToggle(opts, {"zone", zone, "EternalQuintessence"}, Addon.itemNames.EternalQuintessence, format(L["Use |cff00ccff%s|r when available."], Addon.itemNames.EternalQuintessence), disabled)
+        GUI:CreateToggle(opts, {"zone", zone, "EternalQuintessence"}, Addon:InsertItemIcon"EternalQuintessence", nil, disabled).tooltipHyperlink = "item:" .. Addon.items.EternalQuintessence
         GUI:CreateNewline(opts)
-        GUI:CreateToggle(opts, {"zone", zone, "AqualQuintessence"}, Addon.itemNames.AqualQuintessence, format(L["Use |cff00ccff%s|r when available."], Addon.itemNames.AqualQuintessence) .. "|n|n" .. format(L["|cff00ccff%s|r will be used first, if available."], Addon.itemNames.EternalQuintessence), disabled)
+        GUI:CreateToggle(opts, {"zone", zone, "AqualQuintessence"}, Addon:InsertItemIcon"AqualQuintessence", nil, disabled).tooltipHyperlink = "item:" .. Addon.items.AqualQuintessence
       end
     end
     

@@ -107,6 +107,15 @@ do
   function Addon:UnmakeIcon(texture)
     return strMatch(texture, "|T([^:]+):")
   end
+  
+  function Addon:InsertItemIcon(item)
+    local icon = select(5, GetItemInfoInstant(self.items[item]))
+    return (icon and (self:MakeIcon(icon) .. " ") or "") .. self.itemNames[item]
+  end
+  function Addon:InsertSpellIcon(spell)
+    local icon = select(3, GetSpellInfo(self.spells[spell]))
+    return (icon and (self:MakeIcon(icon) .. " ") or "") .. self.spellNames[spell]
+  end
 end
 
 
@@ -358,6 +367,10 @@ do
     return self:GetOption("class", self.MY_CLASS_FILENAME, "useForms") and self:GetOption("class", self.MY_CLASS_FILENAME, "allowedForms", formOptions[form]) and IsSpellKnown(self.spells[form])
   end
   
+  function Addon:CanUseMount(mount)
+    return self:GetOption("class", self.MY_CLASS_FILENAME, "useMounts") and self:GetOption("class", self.MY_CLASS_FILENAME, "allowedMounts", mount) and IsSpellKnown(self.spells[mount])
+  end
+  
   
   
   local auraIDs = {
@@ -412,19 +425,51 @@ end
 
 do
   local zones = {
+    
     -- Restricted Flyable
+    
     [123] = "Wintergrasp",
     [125] = "Dalaran",
     [126] = "Dalaran Underbelly",
     
+    
     -- WotLK
+    
     [143] = "Oculus",
-    [187] = "Icecrown Citadel",
+    -- [186] = "Icecrown Citadel", -- The Lower Citadel
+    [187] = "Icecrown Citadel", -- The Rampart of Skulls
+    -- [188] = "Icecrown Citadel", -- Deathbringer's Rise
+    -- [189] = "Icecrown Citadel", -- The Frost Queen's Lair
+    -- [190] = "Icecrown Citadel", -- The Upper Reaches
+    -- [191] = "Icecrown Citadel", -- Royal Quarters
+    -- [192] = "Icecrown Citadel", -- The Frozen Throne
+    -- [193] = "Icecrown Citadel", -- Frostmourne
+    
     
     -- TBC
+    
+    -- [350] = "Karazhan", -- Servant's Quarters
+    -- [351] = "Karazhan", -- Upper Livery Stables
+    -- [352] = "Karazhan", -- The Banquet Hall
+    -- [353] = "Karazhan", -- The Guest Chambers
+    -- [354] = "Karazhan", -- Opera Hall Balcony
+    [355] = "Karazhan", -- Master's Terrace
+    -- [356] = "Karazhan", -- Lower Broken Stair
+    -- [357] = "Karazhan", -- Upper Broken Stair
+    -- [358] = "Karazhan", -- The Menagerie
+    -- [359] = "Karazhan", -- Guardian's Library
+    -- [360] = "Karazhan", -- The Repository
+    -- [361] = "Karazhan", -- Upper Library
+    -- [362] = "Karazhan", -- The Celestial Watch
+    -- [363] = "Karazhan", -- Gamesman's Hall
+    -- [364] = "Karazhan", -- Medivh's Chambers
+    -- [365] = "Karazhan", -- The Power Station
+    -- [366] = "Karazhan", -- Netherspace
+    
     [332] = "Serpentshrine Cavern",
     [334] = "The Eye",
     [329] = "Battle for Mount Hyjal",
+    
     -- [339] = "Black Temple", -- Black Temple
     [340] = "Black Temple", -- Karabor Sewers
     -- [341] = "Black Temple", -- Sanctuary of Shadows
@@ -434,7 +479,9 @@ do
     -- [345] = "Black Temple", -- Chamber of Command
     -- [346] = "Black Temple", -- Temple Summit
     
+    
     -- Classic
+    
     [232] = "Molten Core",
     -- [287] = "Blackwing Lair", -- Dragonmaw Garrison
     -- [288] = "Blackwing Lair", -- Halls of Strife

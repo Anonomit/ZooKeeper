@@ -954,9 +954,29 @@ do
     return t[random(#t)]
   end
   
+  do
+    cycleMemory = setmetatable({}, {__mode = "k"})
+    function Addon:Cycle(t, offset)
+      if cycleMemory[t] then
+        cycleMemory[t] = next(t, cycleMemory[t]) or next(t)
+      else
+        cycleMemory[t] = offset or next(t)
+      end
+      return cycleMemory[t], t[cycleMemory[t]]
+    end
+  end
+  
+  do
+    cycleMemory = setmetatable({}, {__mode = "k"})
+    function Addon:ICycle(t, offset)
+      cycleMemory[t] = ((cycleMemory[t] or (offset - 1) or 0) % #t) + 1
+      return cycleMemory[t], t[cycleMemory[t]]
+    end
+  end
+  
   
   function Addon:Switch(val, t, fallback)
-    assert(val)
+    assert(val ~= nil)
     return setmetatable(t, {__index = function() return fallback or nop end})[val]()
   end
 end

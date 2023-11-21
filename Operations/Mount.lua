@@ -249,7 +249,7 @@ local function MakeTravelLine()
 end
 
 
-local function UseZoneItem(travelLine, zone, item, noTravel, equip, atCursor)
+local function UseZoneItem(macroText, travelLine, zone, item, noTravel, equip, atCursor)
   if noTravel or GetItemCount(Addon.itemsByCategory[zone][item]) > 0 then
     travelLine:Wipe()
   end
@@ -269,7 +269,7 @@ local function AddZoneLines(macroText, travelLine)
       ["Molten Core"] = function()
         -- local startTime, duration = GetItemCooldown(Addon.itemsByCategory[zone].EternalQuintessence)
         for _, item in ipairs{"EternalQuintessence", "AqualQuintessence"} do
-          UseZoneItem(travelLine, zone, item)
+          UseZoneItem(macroText, travelLine, zone, item)
         end
       end,
       
@@ -287,33 +287,33 @@ local function AddZoneLines(macroText, travelLine)
     if Addon.expansionLevel >= Addon.expansions.tbc then
       if Addon.expansionLevel < Addon.expansions.wrath then
         Addon:Concatenate(cases, {
-          ["Karazhan"] = function()
-            UseZoneItem(travelLine, zone, "BlackenedUrn")
+          Karazhan = function()
+            UseZoneItem(macroText, travelLine, zone, "BlackenedUrn")
           end,
         })
       end
       
       Addon:Concatenate(cases, {
         ["Serpentshrine Cavern"] = function()
-          UseZoneItem(travelLine, zone, "TaintedCore", true)
+          UseZoneItem(macroText, travelLine, zone, "TaintedCore", true)
         end,
         
         ["The Eye"] = function()
-          UseZoneItem(travelLine, zone, "StaffOfDisintegration", true, true)
-          UseZoneItem(travelLine, zone, "NetherstrandLongbow",   true, true)
-          UseZoneItem(travelLine, zone, "WarpSlicer",            true, true)
-          UseZoneItem(travelLine, zone, "Devastation",           true, true)
-          UseZoneItem(travelLine, zone, "CosmicInfuser",         true, true)
-          UseZoneItem(travelLine, zone, "InfinityBlade",         true, true)
-          UseZoneItem(travelLine, zone, "PhaseshiftBulwark",     true, true)
+          UseZoneItem(macroText, travelLine, zone, "StaffOfDisintegration", true, true)
+          UseZoneItem(macroText, travelLine, zone, "NetherstrandLongbow",   true, true)
+          UseZoneItem(macroText, travelLine, zone, "WarpSlicer",            true, true)
+          UseZoneItem(macroText, travelLine, zone, "Devastation",           true, true)
+          UseZoneItem(macroText, travelLine, zone, "CosmicInfuser",         true, true)
+          UseZoneItem(macroText, travelLine, zone, "InfinityBlade",         true, true)
+          UseZoneItem(macroText, travelLine, zone, "PhaseshiftBulwark",     true, true)
         end,
         
         ["Battle for Mount Hyjal"] = function()
-          UseZoneItem(travelLine, zone, "TearsOfTheGoddess")
+          UseZoneItem(macroText, travelLine, zone, "TearsOfTheGoddess")
         end,
         
         ["Black Temple"] = function()
-          UseZoneItem(travelLine, zone, "NajentusSpine", true)
+          UseZoneItem(macroText, travelLine, zone, "NajentusSpine", true)
         end,
       })
     end
@@ -328,13 +328,12 @@ local function AddZoneLines(macroText, travelLine)
         end,
         
         ["Icecrown Citadel"] = function()
-          UseZoneItem(travelLine, zone, "GoblinRocketPack", true)
+          UseZoneItem(macroText, travelLine, zone, "GoblinRocketPack", true)
         end,
       })
     end
     
-    Addon:Switch(zone, {
-    })
+    Addon:Switch(zone, cases)
   end
 end
 
@@ -405,6 +404,9 @@ Addon:RegisterEnableCallback(function(self)
       FlagForUpdate()
     end
   end) -- used for auras that block mounting
+  
+  -- Rewrite the macro immediately if options are changed
+  self:RegisterOptionSetHandler(FlagForUpdate)
   
   -- Just in case, run as soon as possible upon login
   self:OnCombatEnd(ModifyButton)

@@ -64,8 +64,10 @@ local function RefreshAllOptions()
   else
     for _, i in ipairs(C_MountJournal.GetMountIDs()) do
       local creatureName, spellID, icon, active, isUsable, sourceType, isFavorite, isFactionSpecific, faction, hideOnChar, isCollected, mountID = C_MountJournal.GetMountInfoByID(i)
-      allOptions[i] = {name = creatureName, spellID = spellID, active = active, isCollected = isCollected}
-      count = count + 1
+      if isCollected then
+        allOptions[i] = {name = creatureName, spellID = spellID, active = active, isCollected = isCollected}
+        count = count + 1
+      end
     end
   end
   
@@ -95,10 +97,12 @@ local function RefreshUsableOptions()
             count = count + 1
           end
         else
-          local usable, noMana = IsUsableSpell(v.spellID)
-          if usable or noMana then -- try to mount even if there isn't enough mana
-            usableOptions[k] = v
-            count = count + 1
+          if Addon:CanUseMount(Addon.spellsByID[v.spellID]) then
+            local usable, noMana = IsUsableSpell(v.spellID)
+            if usable or noMana then -- try to mount even if there isn't enough mana
+              usableOptions[k] = v
+              count = count + 1
+            end
           end
         end
       end
@@ -361,7 +365,14 @@ end
 
 Addon:RegisterEnableCallback(function(self)
   
-  self:RegisterOptionSetHandler(WipeIdealOptions)
+  self:RegisterOptionSetHandler(function(self, val, ...)
+    local dbPath = {...}
+    if dbPath[3] == "class" and (dbPath[5] == "useMounts" or dbPath[5] == "allowedMounts") then
+      WipeUsableOptions()
+    else
+      WipeIdealOptions()
+    end
+  end)
   
   if self.isClassic then
     

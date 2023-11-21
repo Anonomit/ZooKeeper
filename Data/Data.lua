@@ -121,13 +121,13 @@ do
   end
   
   
-  local items = {}
+  Addon.items = {}
   local function Flatten(t)
     for k, v in pairs(t) do
       if type(v) == "table" then
         Flatten(v)
       else
-        items[k] = v
+        Addon.items[k] = v
       end
     end
   end
@@ -135,7 +135,7 @@ do
   
   local queries = {}
   local function QueryItemName(key)
-    local itemID = items[key] or key
+    local itemID = Addon.items[key] or key
     local name = GetItemInfo(itemID)
     if not name then
       if not queries[itemID] then
@@ -159,7 +159,7 @@ do
     local ticker
     ticker = C_Timer.NewTicker(1, function()
       local found
-      for key in pairs(items) do
+      for key in pairs(Addon.items) do
         if not rawget(Addon.itemNames, key) then
           nop(Addon.itemNames[key])
           found = true
@@ -250,7 +250,21 @@ do
         AspectOfThePack    = 13159,
       },
     },
+    WARLOCK = {
+      mounts = {},
+    },
   }
+  
+  if Addon.isClassic then
+    Addon:Concatenate(Addon.spellsByCategory.PALADIN.mounts, {
+      Felsteed   = 5784,
+      Dreadsteed = 23161,
+    })
+    Addon:Concatenate(Addon.spellsByCategory.WARLOCK.mounts, {
+      Warhorse = 13819,
+      Charger  = 23214,
+    })
+  end
   
   if Addon.expansionLevel >= Addon.expansions.tbc then
     Addon:Concatenate(Addon.spellsByCategory.DRUID.mounts, {
@@ -279,6 +293,8 @@ do
     end
   end
   Flatten(Addon.spellsByCategory)
+  
+  Addon.spellsByID = Addon:Map(Addon.spells, function(v, k) return k end, function(v, k) return v end)
   
   Addon.spellNames = setmetatable({}, {__index = function(self, k) self[k] = GetSpellInfo(Addon.spells[k] or k) return rawget(self, k) or "?" end})
   

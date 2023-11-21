@@ -10,23 +10,13 @@ local L = LibStub("AceLocale-3.0"):GetLocale(ADDON_NAME)
 
 
 
-StaticPopupDialogs["ZOOKEEPER_DEPRECATED_SLASH_COMMAND"] =
-{
-    text         = L["Due to the collections interface,|nthe command |cff00ccff%s|r is no longer available.|n|n%s"],
-    button1      = OKAY,
-    timeout      = 0,
-    whileDead    = 1,
-    hideOnEscape = 1,
-};
-
-StaticPopupDialogs["ZOOKEEPER_COMMAND_NOT_SUPPORT_IN_VERSION"] =
-{
-    text         = L["The command|n|cff00ccff%s|r|nis not available in %s."],
-    button1      = OKAY,
-    timeout      = 0,
-    whileDead    = 1,
-    hideOnEscape = 1,
-};
+StaticPopupDialogs["ZOOKEEPER_DEPRECATED_SLASH_COMMAND"] = {
+  text         = L["Due to the collections interface,|nthe command |cff00ccff%s|r is no longer available.|n|n%s"],
+  button1      = OKAY,
+  timeout      = 0,
+  whileDead    = 1,
+  hideOnEscape = 1,
+}
 
 
 local function GetMountCommandString()

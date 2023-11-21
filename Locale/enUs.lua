@@ -25,13 +25,17 @@ L["Never use a mount/pet that isn't marked as a favorite.|n|nZooKeeper will not 
 L["Always dismount"] = true
 L["When already mounted and a better mount exists, dismount instead of using the better mount."] = true
 
-L["Hide shapeshift error messages"] = true
+L["Hide some error messages"] = true
 L["Hides the red messages that can happen when you're unable to use an ability."] = true
 L["(Not compatible with ErrorFilter)"] = true
 
 
 -- Class options
-L["Use %s class spells."] = true
+L["Use %s spells"] = true
+L["Use |cff00ccff%s|r class spells when appropriate."] = true
+
+L["Use %s mounts"] = true
+L["Use |cff00ccff%s|r class mounts when appropriate."] = true
 
 L["Use |cff00ccff%s|r when appropriate."] = true
 
@@ -45,7 +49,6 @@ L["Use Flight Form even if a faster mount exists."] = true
 
 -- Zone options
 L["Dragon mounts"] = true
-L["Use |cff00ccff%s|r when available."] = true
 
 L["Require click to confirm"] = true
 L["Enable to use a targeting circle.|nDisable to use mouse cursor location."] = true
@@ -53,7 +56,6 @@ L["Enable to use a targeting circle.|nDisable to use mouse cursor location."] = 
 L["Equip and activate legendary items."] = true
 
 L["Douse the Runes of Warding."] = true
-L["|cff00ccff%s|r will be used first, if available."] = true
 
 L["Toggle hunter ranged weapon"] = true
 L["Avoid hunter class calls by toggling ranged weapon off before it happens."] = true
@@ -64,5 +66,4 @@ L["Avoid hunter class calls by toggling ranged weapon off before it happens."] =
 L["Due to the collections interface,|nthe command |cff00ccff%s|r is no longer available.|n|n%s"] = true
 L["Use |cff00ccff/click ZKM|r instead.|n(ZooKeeper Mount)"] = true
 L["Use |cff00ccff/click ZKP|r instead.|n(ZooKeeper Pet)"] = true
-L["The command|n|cff00ccff%s|r|nis not available in %s."] = true
 

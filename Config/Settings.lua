@@ -18,24 +18,28 @@ function Addon:MakeDefaultOptions()
         },
         
         behavior = {
-          preferNonFlyingMountsOnGround = true,
-          allowSlowMounts = true,
-          useTrueRandomization = false,
-          onlyUseFavs = false,
-          alwaysDismount = false,
-          hideErrorMessages = true,
+          preferNonFlyingMountsOnGround = true, -- avoid using the ground forms of flying mounts
+          allowSlowMounts = true, -- use a mount even when it won't increase movement speed in this situation
+          useTrueRandomization = false, -- prevent mount cycling
+          onlyUseFavs = false, -- ignore non-favorite mounts
+          alwaysDismount = false, -- don't remount when a better version is found
+          hideErrorMessages = true, -- applies to red error text when using class spells
         },
         
         class = {
           ["**"] = {
-            useForms = true,
+            useForms = true, -- use class spells that are not actual mounts
             allowedForms = {
               ["*"] = true,
             },
-            allowRiskyShapeshifting = false,
+            useMounts = true, -- only for class-specific mount spells
+            allowedMounts = {
+              ["*"] = true,
+            },
           },
           DRUID = {
-            alwaysPreferFlightForm = false,
+            allowRiskyShapeshifting = false, -- determines if a druid can exit flight form in an area where it cannot be recast
+            alwaysPreferFlightForm  = false,
           },
         },
         
