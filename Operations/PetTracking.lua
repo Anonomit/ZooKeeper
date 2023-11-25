@@ -22,10 +22,10 @@ end
 local optionIndex               = 0
 local allOptions                = {}
 local allOptionsNeedsRefresh    = true
-local idealOptions              = {}
-local idealOptionsNeedsRefresh  = true
 local usableOptions             = {}
 local usableOptionsNeedsRefresh = true
+local idealOptions              = {}
+local idealOptionsNeedsRefresh  = true
 
 
 
@@ -163,6 +163,14 @@ local function WipeUsableOptions()
   end
   WipeIdealOptions()
 end
+local function WipeAllOptions()
+  if not allOptionsNeedsRefresh then
+    Addon:DebugIfOutput("allReset", "All critters cleared")
+    wipe(allOptions)
+    allOptionsNeedsRefresh = true
+  end
+  WipeUsableOptions()
+end
 
 
 
@@ -191,7 +199,7 @@ function Addon:HasSummonedCritter()
 end
 
 function Addon:HasSummonedValidCritter()
-  AttemptRefreshUsableOptions()
+  AttemptRefreshIdealOptions()
   for _, id in ipairs(idealOptions) do
     if allOptions[id].active then
       return true
@@ -236,8 +244,8 @@ Addon:RegisterEnableCallback(function(self)
     
     self:RegisterOptionSetHandler(WipeIdealPets)
     
-    self:RegisterEventCallback("NEW_PET_ADDED",           WipeUsableOptions)
-    self:RegisterEventCallback("PET_JOURNAL_LIST_UPDATE", WipeUsableOptions)
+    self:RegisterEventCallback("NEW_PET_ADDED",           WipeAllOptions)
+    self:RegisterEventCallback("PET_JOURNAL_LIST_UPDATE", WipeAllOptions)
     
     -- fires for other players too
     self:RegisterEventCallback("COMPANION_UPDATE", function(self, event, category)

@@ -6,7 +6,8 @@ local L = LibStub("AceLocale-3.0"):GetLocale(ADDON_NAME)
 
 
 
-local strSub = string.sub
+local strSub     = string.sub
+local strReverse = string.reverse
 
 local tinsert   = tinsert
 local tblConcat = table.concat
@@ -50,57 +51,78 @@ local function MakeGeneralOptions(opts)
   local GUI = self.GUI
   local opts = GUI:CreateGroup(opts, ADDON_NAME, ADDON_NAME)
   
-  if self.isClassic then
-    do
-      local icon = self:MakeIcon"Interface\\AddOns\\ZooKeeper\\Assets\\Textures\\FavoriteSet"
-      GUI:CreateDescription(opts, icon .. " " .. self.L["Favorites"] .. " " .. icon)
-    end
+  do
+    local icon = self:MakeIcon"Interface\\AddOns\\ZooKeeper\\Assets\\Textures\\FavoriteSet"
+    GUI:CreateDescription(opts, icon .. " " .. self.L["Favorites"] .. " " .. icon)
+  end
+  
+  GUI:CreateExecute(opts, {"mounts"}, self.L["Toggle Mounts Journal"], nil, ToggleMountsJournal)
+  GUI:CreateExecute(opts, {"pets"},   self.L["Toggle Pet Journal"],    nil, ToggleCrittersJournal)
+  
+  for k, v in ipairs{
+    {"mounts",   self.L["Mounts"], self.L["Toggle Mounts Journal"], ToggleMountsJournal},
+    {"critters", self.L["Pets"],   self.L["Toggle Pet Journal"],    ToggleCrittersJournal},
+  } do
+    local key, title, journalText, func = unpack(v)
     
-    for k, v in ipairs{
-      {"mounts", self.L["Mounts"]},
-      {"critters", self.L["Pets"]},
-    } do
-      local opts = GUI:CreateGroup(opts, v[2], v[2])
-      
-      GUI:CreateDivider(opts)
-      
-      local count = 0
-      for spellID, itemID in pairs(self:GetOptionT("discovered", v[1])) do
-        count = count + 1
-        if count > 1 then
-          GUI:CreateNewline(opts)
+    local opts = GUI:CreateGroup(opts, key, title)
+    
+    GUI:CreateDivider(opts)
+    
+    local collection = {}
+    if Addon.isClassic then
+      for spellID, itemID in pairs(self:GetOptionSafe("discovered", key)) do
+        collection[#collection+1] = {favKey = spellID, spellID = spellID, itemID = type(itemID) == "number" and itemID or nil, icon = select(3, GetSpellInfo(spellID)), name = self.spellNames[data.spellID]}
+      end
+    else
+      if key == "mounts" then
+        for i = 1, C_MountJournal.GetNumDisplayedMounts() do
+          local creatureName, spellID, icon, active, isUsable, sourceType, isFavorite, isFactionSpecific, faction, hideOnChar, isCollected, mountID = C_MountJournal.GetMountInfoByID(C_MountJournal.GetDisplayedMountID(i))
+          if isCollected and not hideOnChar then
+            collection[#collection+1] = {favKey = mountID, collectionID = mountID, spellID = spellID, icon = icon, name = creatureName}
+          end
         end
-        local text = self.spellNames[spellID]
-        
-        local icon = select(3, GetSpellInfo(spellID))
-        if icon then
-          text = self:MakeIcon(icon) .. " " .. text
-        end
-        
-        GUI:CreateExecute(opts, {"forget", spellID}, self.L["Remove"], nil, function() ForgetDiscovered(v[1], spellID) end)
-        
-        local option = GUI:CreateToggle(opts, {"fav", spellID}, text)
-        option.width = 1.5
-        if type(itemID) == "number" then
-          option.tooltipHyperlink = "item:" .. itemID
-        else
-          option.tooltipHyperlink = "spell:" .. spellID
+      elseif key == "critters" then
+        for i = 1, C_PetJournal.GetNumPets() do
+          local petID, speciesID, owned, customName, level, favorite, isRevoked, speciesName, icon, petType, companionID, tooltip, description, isWild, canBattle, isTradeable, isUnique, obtainable = C_PetJournal.GetPetInfoByIndex(i)
+          if petID then
+            collection[#collection+1] = {favKey = petID, collectionID = mountID, icon = icon, name = speciesName}
+          end
         end
         
       end
-      
-      if count == 0 then
-        GUI:CreateDescription(opts, self.L["No items found"])
-      end
     end
     
-  else
-    GUI:CreateNewline(opts)
+    tblSort(collection, function(a, b) return strReverse(a.name) < strReverse(b.name) end)
     
-    GUI:CreateExecute(opts, {"openMounts"}, self.L["Mounts"], nil, ToggleMountsJournal)
-    GUI:CreateNewline(opts)
+    local count = 0
+    for _, data in ipairs(collection) do
+      count = count + 1
+      if count > 1 then
+        GUI:CreateNewline(opts)
+      end
+      local text = data.name
+      if data.icon then
+        text = self:MakeIcon(data.icon) .. " " .. text
+      end
+      
+      if Addon.isClassic then
+        GUI:CreateExecute(opts, {"forget", data.spellID}, self.L["Remove"], nil, function() ForgetDiscovered(key, data.spellID) end)
+      end
+      
+      local option = GUI:CreateToggle(opts, {"fav", data.favKey}, text)
+      option.width = 1.5
+      if data.itemID then
+        option.tooltipHyperlink = "item:" .. data.itemID
+      elseif data.spellID then
+        option.tooltipHyperlink = "spell:" .. data.spellID
+      end
+      
+    end
     
-    GUI:CreateExecute(opts, {"openCritters"}, self.L["Pets"], nil, ToggleCrittersJournal)
+    if count == 0 then
+      GUI:CreateDescription(opts, self.L["No items found"])
+    end
   end
   
   return opts
@@ -373,7 +395,15 @@ local function MakeZoneOptions(opts, categoryName)
       local zone = "Oculus"
       local opts = GUI:CreateGroup(opts, zone, zone)
       
-      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, L["Dragon mounts"]).tooltipHyperlink = "item:" .. Addon.items[Addon:Cycle(Addon.itemsByCategory.Oculus)]
+      do
+        for i, item in ipairs{
+          "AmberEssence",
+          "RubyEssence",
+          "EmeraldEssence",
+        } do
+          GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, Addon:InsertItemIcon(item), nil).tooltipHyperlink = "item:" .. Addon.items[item]
+        end
+      end
     end
     
     do
@@ -424,7 +454,7 @@ local function MakeZoneOptions(opts, categoryName)
           "InfinityBlade",
           "PhaseshiftBulwark",
         } do
-          GUI:CreateToggle(opts, {"zone", zone, item}, Addon:InsertItemIcon(item), nil, disabled).tooltipHyperlink = "item:" .. Addon.items[item]
+          GUI:CreateToggle(opts, {"zone", zone, "allowedItems", item}, Addon:InsertItemIcon(item), nil, disabled).tooltipHyperlink = "item:" .. Addon.items[item]
         end
       end
     end
@@ -460,9 +490,9 @@ local function MakeZoneOptions(opts, categoryName)
         local opts = GUI:CreateGroupBox(opts)
         
         local disabled = not Addon:GetOption("zone", zone, "useZoneItems")
-        GUI:CreateToggle(opts, {"zone", zone, "EternalQuintessence"}, Addon:InsertItemIcon"EternalQuintessence", nil, disabled).tooltipHyperlink = "item:" .. Addon.items.EternalQuintessence
+        GUI:CreateToggle(opts, {"zone", zone, "allowedItems", "EternalQuintessence"}, Addon:InsertItemIcon"EternalQuintessence", nil, disabled).tooltipHyperlink = "item:" .. Addon.items.EternalQuintessence
         GUI:CreateNewline(opts)
-        GUI:CreateToggle(opts, {"zone", zone, "AqualQuintessence"}, Addon:InsertItemIcon"AqualQuintessence", nil, disabled).tooltipHyperlink = "item:" .. Addon.items.AqualQuintessence
+        GUI:CreateToggle(opts, {"zone", zone, "allowedItems", "AqualQuintessence"}, Addon:InsertItemIcon"AqualQuintessence", nil, disabled).tooltipHyperlink = "item:" .. Addon.items.AqualQuintessence
       end
     end
     
@@ -497,6 +527,8 @@ local function MakeDebugOptions(opts, categoryName)
   GUI:SetDBType"Global"
   local opts = GUI:CreateGroup(opts, categoryName, categoryName)
   
+  GUI:CreateExecute(opts, "reload", self.L["Reload UI"], nil, ReloadUI)
+  
   -- Enable
   do
     local opts = GUI:CreateGroup(opts, GUI:Order(), self.L["Enable"])
@@ -506,10 +538,11 @@ local function MakeDebugOptions(opts, categoryName)
       GUI:CreateToggle(opts, {"debug"}, self.L["Enable"])
       GUI:CreateNewline(opts)
       
-      GUI:CreateToggle(opts, {"debugShowLuaErrors"}, "Show Lua Errors", nil, disabled).width = 2
+      GUI:CreateToggle(opts, {"debugShowLuaErrors"}, self.L["Display Lua Errors"], nil).width = 2
       GUI:CreateNewline(opts)
       
-      GUI:CreateExecute(opts, "reload", self.L["Reload UI"], nil, ReloadUI)
+      local disabled = not self:GetGlobalOption"debugShowLuaErrors"
+      GUI:CreateToggle(opts, {"debugShowLuaWarnings"}, self.L["Lua Warning"], nil, disabled).width = 2
     end
   end
   
@@ -530,8 +563,8 @@ local function MakeDebugOptions(opts, categoryName)
       
       local disabled = disabled or self:GetGlobalOption("debugOutput", "suppressAll")
       
-      
       for i, data in ipairs{
+        {"optionSet",          "Option Set"},
         {"lastSet",            "Last Set"},
         {"allSelected",        "All Selected"},
         {"allReset",           "All Reset"},

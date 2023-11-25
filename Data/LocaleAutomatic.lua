@@ -48,8 +48,10 @@ L["ERROR"] = ERROR_CAPS
 
 
 L["Debug"]                        = BINDING_HEADER_DEBUG
+L["Display Lua Errors"]           = SHOW_LUA_ERRORS
 L["Reload UI"]                    = RELOADUI
 L["Hide messages like this one."] = COMBAT_LOG_MENU_SPELL_HIDE
+L["Lua Warning"]                  = LUA_WARNING
 L["Clear Cache"]                  = BROWSER_CLEAR_CACHE
 -- L["Delete"]                       = DELETE
 
@@ -57,13 +59,14 @@ L["Clear Cache"]                  = BROWSER_CLEAR_CACHE
 
 
 
-
-L["Mounts"]         = MOUNTS
-L["Pets"]           = PETS
-L["Companions"]     = COMPANIONS
-L["No items found"] = BROWSE_NO_RESULTS
-L["Favorites"]      = FAVORITES
-L["Remove"]         = REMOVE
+L["Toggle Mounts Journal"] = BINDING_NAME_TOGGLEMOUNTJOURNAL
+L["Toggle Pet Journal"]    = BINDING_NAME_TOGGLEPETJOURNAL
+L["Mounts"]                = MOUNTS
+L["Pets"]                  = PETS
+L["Companions"]            = COMPANIONS
+L["No items found"]        = BROWSE_NO_RESULTS
+L["Favorites"]             = FAVORITES
+L["Remove"]                = REMOVE
 
 L["Class"] = CLASS
 

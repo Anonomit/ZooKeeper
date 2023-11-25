@@ -299,7 +299,7 @@ do
   Addon.spellNames = setmetatable({}, {__index = function(self, k) self[k] = GetSpellInfo(Addon.spells[k] or k) return rawget(self, k) or "?" end})
   
   Addon:RegisterEnableCallback(function()
-    for category, list in pairs(Addon:GetOptionT"discovered") do
+    for category, list in pairs(Addon:GetOptionSafe"discovered") do
       for k, v in pairs(list) do
         Addon.spells[k] = k
       end

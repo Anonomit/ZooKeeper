@@ -37,7 +37,7 @@ local function Mount(button)
   button.id = nil
   
   local zone = Addon:GetZone()
-  if zone and Addon:GetOption("zone", zone, "useZoneItem") then
+  if zone and Addon:GetOption("zone", zone, "useZoneItems") then
     if zone == "Oculus" then -- Stop using a normal mount entirely once I have the mount item in Oculus
       for key, id in pairs(Addon.items.Oculus) do
         if GetItemCount(id) > 0 then
@@ -249,22 +249,43 @@ local function MakeTravelLine()
 end
 
 
-local function UseZoneItem(macroText, travelLine, zone, item, noTravel, equip, atCursor)
-  if noTravel or GetItemCount(Addon.itemsByCategory[zone][item]) > 0 then
+local combatEquipSlots = setmetatable(Addon:MakeLookupTable({
+  "INVTYPE_WEAPON",
+  "INVTYPE_SHIELD",
+  "INVTYPE_RANGED",
+  "INVTYPE_2HWEAPON",
+  "INVTYPE_WEAPONMAINHAND",
+  "INVTYPE_WEAPONOFFHAND",
+  "INVTYPE_HOLDABLE",
+  "INVTYPE_AMMO",
+  "INVTYPE_THROWN",
+  "INVTYPE_RANGEDRIGHT",
+  "INVTYPE_RELIC",
+}, true), {__index = function(self, k) return rawget(self, k) or false end})
+local function UseZoneItem(macroText, travelLine, zone, item, combatPickup, equip, atCursor)
+  local itemID = Addon.itemsByCategory[zone][item]
+  
+  if not Addon:GetOption("zone", zone, "allowedItems", item) then return end
+  if combatPickup or GetItemCount(itemID) > 0 then
     travelLine:Wipe()
   end
   
   local condition = atCursor and Addon:GetOption("zone", zone, "atCursor") and "[@cursor]" or ""
   if equip then
-    macroText:AddLine(Addon.Line("equip"):Add("item:" .. Addon.itemsByCategory[zone][item]))
+    local itemEquipLoc = select(4, GetItemInfoInstant(itemID))
+    local conditionals = Addon.Conditionals()
+    if itemEquipLoc and not combatEquipSlots[itemEquipLoc] then
+      conditionals:Add(Addon.Conditional"combat")
+    end
+    macroText:AddLine(Addon.Line("equip"):Add(conditionals, "item:" .. itemID))
   end
-  macroText:AddLine(Addon.Line("use"):Add(condition, "item:" .. Addon.itemsByCategory[zone][item]))
+  macroText:AddLine(Addon.Line("use"):Add(condition, "item:" .. itemID))
 end
 
 
 local function AddZoneLines(macroText, travelLine)
   local zone = Addon:GetZone()
-  if zone and Addon:GetOption("zone", zone, "useZoneItem") then
+  if zone and Addon:GetOption("zone", zone, "useZoneItems") then
     local cases = {
       ["Molten Core"] = function()
         -- local startTime, duration = GetItemCooldown(Addon.itemsByCategory[zone].EternalQuintessence)
@@ -322,18 +343,19 @@ local function AddZoneLines(macroText, travelLine)
       Addon:Concatenate(cases, {
         Oculus = function()
           for key, id in pairs(Addon.items.Oculus) do
-            macroText:AddLine(Addon.Line("use"):Add("item:" .. id))
+            UseZoneItem(macroText, travelLine, zone, key)
           end
           macroText:AddLine"/run VehicleExit()"
         end,
         
         ["Icecrown Citadel"] = function()
-          UseZoneItem(macroText, travelLine, zone, "GoblinRocketPack", true)
+          UseZoneItem(macroText, travelLine, zone, "GoblinRocketPack", true, true)
         end,
       })
     end
     
     Addon:Switch(zone, cases)
+    Addon:Debugf("zone is %s", tostring(zone))
   end
 end
 

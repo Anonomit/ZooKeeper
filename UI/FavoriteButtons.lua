@@ -71,5 +71,7 @@ Addon:OnAddonLoad("Blizzard_Collections", function(self)
   end
   
   hooksecurefunc("MountJournal_SetSelected", function() This:UpdateAll() end)
+  
+  Addon:RegisterOptionSetHandler(function() This:UpdateAll() end)
 end)
 

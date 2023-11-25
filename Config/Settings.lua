@@ -46,7 +46,10 @@ function Addon:MakeDefaultOptions()
         zone = {
           ["**"] = {
             useZoneItems = true,
-            ["*"]        = true,
+            allowedItems = {
+              ["*"] = true,
+            },
+            atCursor = true,
           },
         },
       },
@@ -56,7 +59,8 @@ function Addon:MakeDefaultOptions()
         -- Debug options
         debug = false,
         
-        debugShowLuaErrors = true,
+        debugShowLuaErrors   = true,
+        debugShowLuaWarnings = true,
           
         debugOutput = {
           ["*"] = false,

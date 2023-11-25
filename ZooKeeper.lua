@@ -17,7 +17,7 @@ function Addon:InitDB()
   else -- upgrade data schema
     
     -- migrate settings from earlier than 2.0.0 (collections interface release)
-    if configVersion < self.SemVer"2.0.0" then
+    if configVersion < self.SemVer"2.0.0" and Addon.isWrath then
       self:Debugf("Migrating from %s to 2.0.0", tostring(configVersion))
       
       local fav = {} -- store old spellIDs
@@ -45,6 +45,30 @@ function Addon:InitDB()
       
       -- can't simply match spellIDs to pet IDs, so just leaving the old ones there and users can redo their favorites
       self:Debug"Migration complete"
+    end
+    
+    -- begin using 'allowedItems' key
+    if configVersion < self.SemVer"3.1.0" then
+      self:Debugf("Migrating from %s to 3.1.0", tostring(configVersion))
+      for _, item in ipairs{
+        "StaffOfDisintegration",
+        "NetherstrandLongbow",
+        "WarpSlicer",
+        "Devastation",
+        "CosmicInfuser",
+        "InfinityBlade",
+        "PhaseshiftBulwark",
+      } do
+        Addon:SetOption(Addon:GetOption("zone", "The Eye", item), "zone", "The Eye", "allowedItems", item)
+        Addon:SetOption(nil, "zone", "The Eye", item)
+      end
+      for _, item in ipairs{
+        "AqualQuintessence",
+        "EternalQuintessence",
+      } do
+        Addon:SetOption(Addon:GetOption("zone", "Molten Core", item), "zone", "Molten Core", "allowedItems", item)
+        Addon:SetOption(nil, "zone", "Molten Core", item)
+      end
     end
   end
   

@@ -17,10 +17,10 @@ end
 local optionIndex               = 0
 local allOptions                = {}
 local allOptionsNeedsRefresh    = true
-local idealOptions              = {}
-local idealOptionsNeedsRefresh  = true
 local usableOptions             = {}
 local usableOptionsNeedsRefresh = true
+local idealOptions              = {}
+local idealOptionsNeedsRefresh  = true
 
 
 

@@ -48,8 +48,6 @@ L["Use Flight Form even if a faster mount exists."] = true
 
 
 -- Zone options
-L["Dragon mounts"] = true
-
 L["Require click to confirm"] = true
 L["Enable to use a targeting circle.|nDisable to use mouse cursor location."] = true
 

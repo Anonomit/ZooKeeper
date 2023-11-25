@@ -48,20 +48,21 @@ do
   end
   
   function GUI:CreateEntry(opts, keys, name, desc, widgetType, disabled, order)
+    order = order or self:Order()
     if type(keys) ~= "table" then keys = {keys} end
-    local key = widgetType .. "_" .. (tblConcat(keys, ".") or "")
-    opts.args[key] = {name = name, desc = desc, type = widgetType, order = order or self:Order(), disabled = disabled}
+    local key = widgetType .. "_" .. (tblConcat(keys, ".") or "") .. "_" .. order
+    opts.args[key] = {name = name, desc = desc, type = widgetType, order = order, disabled = disabled}
     opts.args[key].set = SetFunction(keys)
     opts.args[key].get = GetFunction(keys)
     return opts.args[key]
   end
   
   function GUI:CreateHeader(opts, name)
-    return self:CreateEntry(opts, self:Order(), name, nil, "header", nil, self:Order(0))
+    return self:CreateEntry(opts, {"header"}, name, nil, "header")
   end
   
   function GUI:CreateDescription(opts, desc, fontSize)
-    local option = self:CreateEntry(opts, self:Order(), desc, nil, "description", nil, self:Order(0))
+    local option = self:CreateEntry(opts, {"description"}, desc, nil, "description")
     option.fontSize = fontSize or "large"
     return option
   end
@@ -134,13 +135,13 @@ do
   end
   
   function GUI:CreateGroup(opts, key, name, desc, groupType, disabled)
-    key = tostring(key)
-    opts.args[key] = {name = name, desc = desc, type = "group", childGroups = groupType or "tab", args = {}, order = self:Order(), disabled = disabled}
+    local order = self:Order()
+    key = tostring(key or order)
+    opts.args[key] = {name = name, desc = desc, type = "group", childGroups = groupType or "tab", args = {}, order = order, disabled = disabled}
     return opts.args[key]
   end
   function GUI:CreateGroupBox(opts, name)
-    local key = self:Order(-1)
-    local option = self:CreateGroup(opts, key, name or " ")
+    local option = self:CreateGroup(opts, nil, name or " ")
     option.inline = true
     return option
   end

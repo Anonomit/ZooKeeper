@@ -60,7 +60,8 @@ local random       = random
 
 
 do
-  Addon.debugPrefix = "[" .. BINDING_HEADER_DEBUG .. "]"
+  Addon.debugPrefix = "[" .. (BINDING_HEADER_DEBUG or "Debug") .. "]"
+  Addon.warnPrefix  = "[" .. (LUA_WARNING or "Warning") .. "]"
   
   local debugMode = false
   
@@ -76,12 +77,26 @@ do
   end
   --@end-debug@
   
-  function Addon:IsDebugEnabled()
-    if self.db then
-      return self:GetGlobalOption"debug"
+  
+  local function CheckOptionSafe(default, ...)
+    if Addon.db then
+      return Addon:CheckTable(Addon.db, ...)
     else
-      return debugMode
+      return default
     end
+  end
+  
+  function Addon:IsDebugEnabled()
+    return CheckOptionSafe(debugMode, "global", "debug")
+  end
+  local function IsDebugSuppressed()
+    return not Addon:IsDebugEnabled() or CheckOptionSafe(not debugMode, "global", "debugOutput", "suppressAll")
+  end
+  local function ShouldShowLuaErrors()
+    return Addon:IsDebugEnabled() and CheckOptionSafe(debugMode, "global", "debugShowLuaErrors")
+  end
+  local function ShouldShowWarnings()
+    return Addon:IsDebugEnabled() and CheckOptionSafe(debugMode, "global", "debugShowLuaWarnings")
   end
   
   function Addon:Dump(t)
@@ -89,8 +104,7 @@ do
   end
   
   local function Debug(self, methodName, ...)
-    if not self:IsDebugEnabled() then return end
-    if self.GetGlobalOption and self:GetGlobalOption("debugOutput", "suppressAll") then return end
+    if IsDebugSuppressed() then return end
     return self[methodName](self, ...)
   end
   function Addon:Debug(...)
@@ -101,9 +115,21 @@ do
   end
   function Addon:DebugDump(t, header)
     if header then
-      Debug(self, "Print", tostring(header) .. ":")
+      Debug(self, "Print", self.debugPrefix, tostring(header) .. ":")
     end
     return self:Dump(t)
+  end
+  
+  
+  local function Warn(self, methodName, ...)
+    if not ShouldShowWarnings() then return end
+    return self[methodName](self, ...)
+  end
+  function Addon:Warn(...)
+    return Warn(self, "Print", self.warnPrefix, ...)
+  end
+  function Addon:Warnf(...)
+    return Warn(self, "Printf", "%s " .. select(1, ...), self.warnPrefix, select(2, ...))
   end
   
   local function DebugIf(self, methodName, keys, ...)
@@ -156,13 +182,9 @@ do
   end
   
   
-  function Addon:GetDebugView(key)
-    return self:IsDebugEnabled() and not self:GetGlobalOption("debugView", "suppressAll") and self:GetGlobalOption("debugView", key)
-  end
-  
   do
     local function GetErrorHandler(errFunc)
-      if Addon:IsDebugEnabled() and (not Addon:IsDBLoaded() or Addon:GetGlobalOption"debugShowLuaErrors") then
+      if Addon:IsDebugEnabled() and ShouldShowLuaErrors() then
         return function(...)
           geterrorhandler()(...)
           if errFunc then
@@ -179,7 +201,7 @@ do
       return xpcall(func, nop)
     end
     function Addon:Throw(...)
-      if Addon:IsDebugEnabled() and (not Addon:IsDBLoaded() or Addon:GetGlobalOption"debugShowLuaErrors") then
+      if Addon:IsDebugEnabled() and ShouldShowLuaErrors() then
         geterrorhandler()(...)
       end
     end
@@ -331,11 +353,11 @@ do
     for _, dbSection in ipairs(dbTypes) do
       local typeKey, typeName = unpack(dbSection, 1, 2)
       
-      local GetOptionT       = format("Get%s%sOptionT", dbName,      typeName)
-      local GetOption        = format("Get%s%sOption",  dbName,      typeName)
-      local GetDefaultOption = format("Get%s%sOption",  defaultName, typeName)
+      local GetOptionSafe    = format("Get%s%sOptionSafe", dbName,      typeName)
+      local GetOption        = format("Get%s%sOption",     dbName,      typeName)
+      local GetDefaultOption = format("Get%s%sOption",     defaultName, typeName)
       
-      Addon[GetOptionT] = function(self, ...)
+      Addon[GetOptionSafe] = function(self, ...)
         assert(self[dbKey], format("Attempted to access database before initialization: %s", tblConcat({dbKey, typeKey, ...}, " > ")))
         local val = self[dbKey][typeKey]
         for _, key in ipairs{...} do
@@ -346,9 +368,12 @@ do
       end
       
       Addon[GetOption] = function(self, ...)
-        local val = Addon[GetOptionT](self, ...)
+        local val = Addon[GetOptionSafe](self, ...)
         if type(val) == "table" then
-          self:Debugf("[Warning] Database request returned a table: %s", tblConcat({dbKey, typeKey, ...}, " > "))
+          self:Warnf("Database request returned a table: %s", tblConcat({dbKey, typeKey, ...}, " > "))
+        end
+        if val == nil then
+          self:Warnf("Database request found empty value: %s", tblConcat({dbKey, typeKey, ...}, " > "))
         end
         return val
       end
@@ -372,7 +397,7 @@ do
           end
           local lastVal = tbl[lastKey]
           if type(lastVal) == "table" then
-            self:Debugf("[Warning] Database access overwriting a table: %s", tblConcat({dbKey, typeKey, ...}, " > "))
+            self:Warnf("Database access overwriting a table: %s", tblConcat({dbKey, typeKey, ...}, " > "))
           end
           tbl[lastKey] = val
           OnOptionSet(Addon, val, dbKey, typeKey, ...)
@@ -404,15 +429,6 @@ do
       
     end
   end
-  
-  
-  -- Addon:RegisterOptionSetHandler(function(self, val, ...)
-  --   self:xpcall(function()
-  --     if self.AceConfigRegistry then
-  --       self.AceConfigRegistry:NotifyChange(ADDON_NAME)
-  --     end
-  --   end)
-  -- end)
 end
 
 
@@ -937,7 +953,15 @@ do
     end
     return new
   end
-
+  
+  
+  function Addon:CheckTable(t, ...)
+    local val = t
+    for _, key in ipairs{...} do
+      val = (val or {})[key]
+    end
+    return val
+  end
   
   function Addon:Concatenate(t1, t2)
     for _, v in ipairs(t2) do
