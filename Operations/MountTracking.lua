@@ -45,7 +45,7 @@ local function RefreshAllOptions()
         local containerInfo = C_Container.GetContainerItemInfo(bag, slot)
         if containerInfo then
           local spellName, spellID = GetItemSpell(containerInfo.itemID)
-          if spellID and Addon.mounts[spellID] then
+          if spellID and Addon.mounts[spellID] and Addon:IsInAQ() == Addon.aqMounts[spellID] then
             Addon:SetOption(containerInfo.itemID, "discovered", "mounts", spellID)
             allOptions[spellID] = {name = GetItemInfo(containerInfo.itemID) or spellName, spellID = spellID, active = IsMountActive(spellID), isCollected = true, itemID = containerInfo.itemID, bag = bag, slot = slot}
             count = count + 1
@@ -54,11 +54,13 @@ local function RefreshAllOptions()
       end
     end
     
-    for spellID in pairs(Addon.mounts) do
-      if IsSpellKnown(spellID) then
-        Addon:SetOption(true, "discovered", "mounts", spellID)
-        allOptions[spellID] = {name = GetSpellInfo(spellID), spellID = spellID, active = IsMountActive(spellID), isCollected = true}
-        count = count + 1
+    if not Addon:IsInAQ() then
+      for spellID in pairs(Addon.mounts) do
+        if IsSpellKnown(spellID) then
+          Addon:SetOption(true, "discovered", "mounts", spellID)
+          allOptions[spellID] = {name = GetSpellInfo(spellID), spellID = spellID, active = IsMountActive(spellID), isCollected = true}
+          count = count + 1
+        end
       end
     end
   else
