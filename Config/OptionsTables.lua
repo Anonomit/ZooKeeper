@@ -72,7 +72,7 @@ local function MakeGeneralOptions(opts)
     local collection = {}
     if Addon.isClassic then
       for spellID, itemID in pairs(self:GetOptionSafe("discovered", key)) do
-        collection[#collection+1] = {favKey = spellID, spellID = spellID, itemID = type(itemID) == "number" and itemID or nil, icon = select(3, GetSpellInfo(spellID)), name = self.spellNames[data.spellID]}
+        collection[#collection+1] = {favKey = spellID, spellID = spellID, itemID = type(itemID) == "number" and itemID or nil, icon = select(3, GetSpellInfo(spellID)), name = self.spellNames[spellID]}
       end
     else
       if key == "mounts" then

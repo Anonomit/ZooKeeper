@@ -42,6 +42,7 @@ local function Summon(button)
       Addon:SetLastCritter(id)
     elseif Addon:HasValidCritters() then
       id = Addon:SelectCritter()
+      DoEmote"STAND"
       C_PetJournal.SummonPetByGUID(id)
       Addon:SetLastCritter(id)
     end

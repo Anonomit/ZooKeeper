@@ -330,7 +330,6 @@ do
     ImprovedGhostWolf = 2,
     FeralSwiftness    = 1,
   }
-  
 end
 
 

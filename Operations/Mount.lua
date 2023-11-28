@@ -349,13 +349,12 @@ local function AddZoneLines(macroText, travelLine)
         end,
         
         ["Icecrown Citadel"] = function()
-          UseZoneItem(macroText, travelLine, zone, "GoblinRocketPack", true, true)
+          UseZoneItem(macroText, travelLine, zone, "GoblinRocketPack", true, true, true)
         end,
       })
     end
     
     Addon:Switch(zone, cases)
-    Addon:Debugf("zone is %s", tostring(zone))
   end
 end
 

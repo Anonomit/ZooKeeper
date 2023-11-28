@@ -364,51 +364,14 @@ do
   }, {__index = function(self, k) return k end})
   
   function Addon:CanUseForm(form)
+    if not self.spells[form] then return false end
     return self:GetOption("class", self.MY_CLASS_FILENAME, "useForms") and self:GetOption("class", self.MY_CLASS_FILENAME, "allowedForms", formOptions[form]) and IsSpellKnown(self.spells[form])
   end
   
   function Addon:CanUseMount(mount)
+    if not self.spells[mount] then return false end
     return self:GetOption("class", self.MY_CLASS_FILENAME, "useMounts") and self:GetOption("class", self.MY_CLASS_FILENAME, "allowedMounts", mount) and IsSpellKnown(self.spells[mount])
   end
-  
-  
-  
-  local auraIDs = {
-    PALADIN = {
-      DevotionAura = {
-        
-      },
-    },
-  }
-  
-  
-  local function GetAuraTable()
-    local auras = setmetatable({
-      PALADIN = {
-        -- "DevotionAura"
-        [1] = "something",
-        [2] = "something",
-        [3] = "something",
-        [4] = "something",
-        [5] = "something",
-        [6] = "something",
-        [7] = "CrusaderAura",
-      },
-    }, {__index = function() return {} end})
-  end
-  
-  local lastAura
-  local function CheckAuras()
-    
-    local auraTable = auras[Addon.MY_CLASS_FILENAME]
-    
-    local form = GetShapeshiftForm()
-  end
-  Addon:RegisterEnableCallback(function(self)
-    self:RegisterEventCallback("UPDATE_SHAPESHIFT_FORM", function()
-      
-    end)
-  end)
 end
 
 
