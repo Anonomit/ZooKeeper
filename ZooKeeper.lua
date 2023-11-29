@@ -48,8 +48,8 @@ function Addon:InitDB()
     end
     
     -- begin using 'allowedItems' key
-    if configVersion < self.SemVer"3.1.0" then
-      self:Debugf("Migrating from %s to 3.1.0", tostring(configVersion))
+    if configVersion < self.SemVer"3.0.0" then
+      self:Debugf("Migrating from %s to 3.0.0", tostring(configVersion))
       for _, item in ipairs{
         "StaffOfDisintegration",
         "NetherstrandLongbow",
