@@ -407,6 +407,13 @@ local function MakeZoneOptions(opts, categoryName)
     end
     
     do
+      local zone = "Ulduar"
+      local opts = GUI:CreateGroup(opts, zone, zone)
+      
+      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, Addon:InsertItemIcon"MagneticCore").tooltipHyperlink = "item:" .. Addon.items.MagneticCore
+    end
+    
+    do
       local zone = "Icecrown Citadel"
       local opts = GUI:CreateGroup(opts, zone, zone)
       

@@ -400,6 +400,11 @@ do
     
     [143] = "Oculus",
     -- [186] = "Icecrown Citadel", -- The Lower Citadel
+    
+    -- [744] = "Ulduar", -- The Antechamber of Ulduar
+    [745] = "Ulduar", -- The Spark of Imagination
+    -- [746] = "Ulduar", -- The Observation Ring
+    
     [187] = "Icecrown Citadel", -- The Rampart of Skulls
     -- [188] = "Icecrown Citadel", -- Deathbringer's Rise
     -- [189] = "Icecrown Citadel", -- The Frost Queen's Lair

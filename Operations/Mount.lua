@@ -348,6 +348,10 @@ local function AddZoneLines(macroText, travelLine)
           macroText:AddLine"/run VehicleExit()"
         end,
         
+        Ulduar = function()
+          UseZoneItem(macroText, travelLine, zone, "MagneticCore", true)
+        end,
+        
         ["Icecrown Citadel"] = function()
           UseZoneItem(macroText, travelLine, zone, "GoblinRocketPack", true, true, true)
         end,

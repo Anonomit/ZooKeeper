@@ -114,6 +114,9 @@ do
         AmberEssence   = 37859,
         RubyEssence    = 37860,
       },
+      ["Ulduar"] = {
+        MagneticCore = 46029,
+      },
       ["Icecrown Citadel"] = {
         GoblinRocketPack = 49278,
       },
