@@ -59,14 +59,14 @@ function Addon:InitDB()
         "InfinityBlade",
         "PhaseshiftBulwark",
       } do
-        Addon:SetOption(Addon:GetOption("zone", "The Eye", item), "zone", "The Eye", "allowedItems", item)
+        Addon:SetOption(Addon:GetOption("zone", "The Eye", "allowedItems", item), "zone", "The Eye", "allowedItems", item)
         Addon:SetOption(nil, "zone", "The Eye", item)
       end
       for _, item in ipairs{
         "AqualQuintessence",
         "EternalQuintessence",
       } do
-        Addon:SetOption(Addon:GetOption("zone", "Molten Core", item), "zone", "Molten Core", "allowedItems", item)
+        Addon:SetOption(Addon:GetOption("zone", "Molten Core", "allowedItems", item), "zone", "Molten Core", "allowedItems", item)
         Addon:SetOption(nil, "zone", "Molten Core", item)
       end
     end
