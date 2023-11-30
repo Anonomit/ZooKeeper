@@ -275,7 +275,7 @@ local function UseZoneItem(macroText, travelLine, zone, item, combatPickup, equi
     local itemEquipLoc = select(4, GetItemInfoInstant(itemID))
     local conditionals = Addon.Conditionals()
     if itemEquipLoc and not combatEquipSlots[itemEquipLoc] then
-      conditionals:Add(Addon.Conditional"combat")
+      conditionals:Add(Addon.Conditional"nocombat")
     end
     macroText:AddLine(Addon.Line("equip"):Add(conditionals, "item:" .. itemID))
   end
