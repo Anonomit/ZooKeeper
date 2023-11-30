@@ -36,15 +36,8 @@ local function Mount(button)
   button:SetAttribute"item"
   button.id = nil
   
-  local zone = Addon:GetZone()
-  if zone and Addon:GetOption("zone", zone, "useZoneItems") then
-    if zone == "Oculus" then -- Stop using a normal mount entirely once I have the mount item in Oculus
-      for key, id in pairs(Addon.items.Oculus) do
-        if GetItemCount(id) > 0 then
-          return
-        end
-      end
-    end
+  if Addon:ShouldZoneItemBlockMounting() then
+    return
   end
   
   
