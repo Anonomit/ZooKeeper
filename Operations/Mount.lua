@@ -434,7 +434,7 @@ Addon:RegisterEnableCallback(function(self)
   self:RegisterOptionSetHandler(FlagForUpdate)
   
   -- Just in case, run as soon as possible upon login
-  self:OnCombatEnd(ModifyButton)
+  self:WhenOutOfCombat(ModifyButton)
 end)
 
 

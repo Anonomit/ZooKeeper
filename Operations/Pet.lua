@@ -93,6 +93,6 @@ Addon:RegisterEnableCallback(function(self)
   
   
   -- Just in case, run as soon as possible upon login
-  self:OnCombatEnd(ModifyButton)
+  self:WhenOutOfCombat(ModifyButton)
 end)
 

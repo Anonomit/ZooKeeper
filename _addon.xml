@@ -6,8 +6,6 @@
   
   <Include file="Locale\_locale.xml"/>
   
-  <Include file="Data\_data.xml"/>
-  
   <Include file="Operations\_operations.xml"/>
   
   <Include file="UI\_ui.xml"/>
