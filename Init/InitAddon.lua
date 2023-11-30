@@ -895,10 +895,15 @@ do
     [76153] = {40625, 1, nil, 100, 310, 0},
     [76154] = {40725, 3, nil, 100, 310, 0},
     
+    -- Deluxe edition and similar mounts
     -- entirely new mounts are missing creature IDs: GetCompanionInfo(PetPaperDollFrameCompanionFrame.mode, selected)
     [348459] = {1, 2, 0, 0, {150, 280}, 0}, -- Reawakened Phase-Hunter
     [372677] = {1, 4, 0, {60, 100}, {150, 280}, 0}, -- Kalu'ak Whalebone Glider
     [394209] = {1, 4, 0, {60, 100}, {150, 280, 310}}, -- Festering Emerald Drake
+    
+    -- Season of Discovery mounts
+    [429856] = {1, 2, 0, 51, 0}, -- Trainee's Sentinel Nightsaber
+    [429857] = {1, 2, 0, 51, 0}, -- Trainee's Outrider Wolf
   }
   
   local function Set(index, value, ...)
@@ -926,7 +931,8 @@ do
   Set(8, function() return UnitClassBase"player" == "WARLOCK" end, 5784, 23161)
   
   
-  Addon.aqMounts = setmetatable(Addon:MakeLookupTable({25953, 26054, 26055, 26056}, true), {__index = function() return false end})
+  Addon.aqMounts        = setmetatable(Addon:MakeLookupTable({25953, 26054, 26055, 26056}, true), {__index = function() return false end})
+  Addon.ashenvaleMounts = setmetatable(Addon:MakeLookupTable({429856, 429857},             true), {__index = function() return false end})
   
   
   
@@ -1470,6 +1476,10 @@ do
   
   function Addon:IsInAQ()
     return self:GetMapID() == 531
+  end
+  
+  function Addon:IsInAshenvale()
+    return C_Map.GetBestMapForUnit"player" == 1440
   end
   
   
