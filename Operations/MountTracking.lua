@@ -160,8 +160,10 @@ local function FilterToFastestMounts(candidates, mountType)
   local speedFilter = 0
   for _, i in ipairs(candidates) do
     local speed = Addon:GetMountFastestSpeed(usableOptions[i].spellID, mountType)
-    if not speedFilter or speed > speedFilter then
-      speedFilter = speed
+    if speed then
+      if not speedFilter or speed > speedFilter then
+        speedFilter = speed
+      end
     end
   end
   

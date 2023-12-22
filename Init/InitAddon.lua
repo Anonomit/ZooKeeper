@@ -902,8 +902,8 @@ do
     [394209] = {1, 4, 0, {60, 100}, {150, 280, 310}}, -- Festering Emerald Drake
     
     -- Season of Discovery mounts
-    [429856] = {1, 2, 0, 51, 0}, -- Trainee's Sentinel Nightsaber
-    [429857] = {1, 2, 0, 51, 0}, -- Trainee's Outrider Wolf
+    [429856] = {1, 0, 0, 51, 0}, -- Trainee's Sentinel Nightsaber
+    [429857] = {1, 0, 0, 51, 0}, -- Trainee's Outrider Wolf
   }
   
   local function Set(index, value, ...)
