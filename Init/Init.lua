@@ -99,7 +99,7 @@ do
     return Addon:IsDebugEnabled() and CheckOptionSafe(debugMode, "global", "debugShowLuaWarnings")
   end
   function Addon:GetDebugView(key)
-    return self:IsDebugEnabled() and not CheckOptionSafe(debugMode, "global", "suppressAll") and CheckOptionSafe(debugMode, "debugView", key)
+    return self:IsDebugEnabled() and not CheckOptionSafe(debugMode, "global", "suppressAll") and CheckOptionSafe(debugMode, "global", "debugView", key)
   end
   
   function Addon:Dump(t)
@@ -246,6 +246,11 @@ do
     bcc     = 2,
     classic = 1,
   }
+  Addon.seasons = {
+    mastery   = 1,
+    discovery = 2,
+  }
+  Addon.season = ((C_Seasons or {}).GetActiveSeason or nop)() or 0
   Addon.expansionLevel = tonumber(GetBuildInfo():match"^(%d+)%.")
   if Addon.expansionLevel >= Addon.expansions.retail then
     Addon.expansionName = "retail"
@@ -260,6 +265,12 @@ do
   Addon.isWrath   = Addon.expansionName == "wrath"
   Addon.isTBC     = Addon.expansionName == "tbc"
   Addon.isClassic = Addon.expansionName == "classic"
+  
+  Addon.isSeasonOfMastery   = Addon.season == Addon.seasons.mastery
+  Addon.isSeasonOfDiscovery = Addon.season == Addon.seasons.discovery
+  
+  Addon.isSoM = Addon.isSeasonOfMastery
+  Addon.isSoD = Addon.isSeasonOfDiscovery
 end
 
 
@@ -1037,7 +1048,7 @@ do
     end
     return new
   end
-
+  
   function Addon:Filter(t, ...)
     local new = {}
     
@@ -1074,14 +1085,14 @@ do
     end
     return new
   end
-
+  
   function Addon:Shuffle(t)
     for i = #t, 2, -1 do
       local j = math.random(i)
       t[i], t[j] = t[j], t[i]
     end
   end
-
+  
   
   function Addon:MakeLookupTable(t, val, keepOrigVals)
     local ValFunc
@@ -1097,13 +1108,17 @@ do
       if ValFunc then
         new[v] = ValFunc(v, k, t)
       else
-        new[v] = k
+        new[v] = true
       end
       if keepOrigVals and new[k] == nil then
         new[k] = v
       end
     end
     return new
+  end
+  
+  function Addon:MakeBoolTable(t)
+    return setmetatable(self:MakeLookupTable(t), {__index = function() return false end})
   end
   
   

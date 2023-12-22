@@ -931,8 +931,8 @@ do
   Set(8, function() return UnitClassBase"player" == "WARLOCK" end, 5784, 23161)
   
   
-  Addon.aqMounts        = setmetatable(Addon:MakeLookupTable({25953, 26054, 26055, 26056}, true), {__index = function() return false end})
-  Addon.ashenvaleMounts = setmetatable(Addon:MakeLookupTable({429856, 429857},             true), {__index = function() return false end})
+  Addon.aqMounts        = Addon:MakeBoolTable{25953, 26054, 26055, 26056}
+  Addon.ashenvaleMounts = Addon:MakeBoolTable{429856, 429857}
   
   
   
@@ -1493,10 +1493,10 @@ do
   end
   
   -- locations in northrend in which a flying mount may not work, despite passing all checks
-  local northrendFailureLocations = setmetatable(Addon:MakeLookupTable({
+  local northrendFailureLocations = Addon:MakeBoolTable{
     125, -- Dalaran
     126, -- Dalaran Underbelly
-  }, true), {__index = function() return false end})
+  }
   
   -- continents in which a flying mount may not work, even though IsFlyableArea() == true
   Addon.flyingFailureLocations = setmetatable({

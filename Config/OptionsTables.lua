@@ -701,6 +701,7 @@ function Addon:MakeAddonOptions(chatCmd)
     return opts
   end)
   
+  -- default is (700, 500)
   self.AceConfigDialog:SetDefaultSize(ADDON_NAME, 700, 800)
 end
 

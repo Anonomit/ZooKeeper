@@ -242,7 +242,7 @@ local function MakeTravelLine()
 end
 
 
-local combatEquipSlots = setmetatable(Addon:MakeLookupTable({
+local combatEquipSlots = Addon:MakeLookupTable{
   "INVTYPE_WEAPON",
   "INVTYPE_SHIELD",
   "INVTYPE_RANGED",
@@ -254,7 +254,7 @@ local combatEquipSlots = setmetatable(Addon:MakeLookupTable({
   "INVTYPE_THROWN",
   "INVTYPE_RANGEDRIGHT",
   "INVTYPE_RELIC",
-}, true), {__index = function(self, k) return rawget(self, k) or false end})
+}
 local function UseZoneItem(macroText, travelLine, zone, item, combatPickup, equip, atCursor)
   local itemID = Addon.itemsByCategory[zone][item]
   
