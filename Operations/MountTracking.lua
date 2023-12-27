@@ -39,7 +39,7 @@ local function RefreshAllOptions()
   wipe(allOptions)
   
   local count = 0
-  if Addon.isClassic then
+  if Addon.expansionLevel < Addon.expansions.wrath then
     for bag = 0, NUM_BAG_SLOTS do
       for slot = 1, C_Container.GetContainerNumSlots(bag) do
         local containerInfo = C_Container.GetContainerItemInfo(bag, slot)
@@ -89,7 +89,7 @@ local function RefreshUsableOptions()
   wipe(usableOptions)
   
   local count = 0
-  if Addon.isClassic then
+  if Addon.expansionLevel < Addon.expansions.wrath then
     if IsOutdoors() then
       for k, v in pairs(allOptions) do
         if v.itemID then
@@ -337,7 +337,7 @@ function Addon:SelectMount()
     end
   end
   self:DebugfIfOutput("finalSelectionMade", "Mount selected: %s (%s %d)", usableOptions[id].name, usableOptions[id].itemID and "item" or "id", id)
-  if self.isClassic then
+  if self.expansionLevel < self.expansions.wrath then
     self:SetOption(usableOptions[id].itemID or true, "discovered", "mounts", id)
   end
   return id, usableOptions[id].itemID
@@ -378,7 +378,7 @@ Addon:RegisterEnableCallback(function(self)
     end
   end)
   
-  if self.isClassic then
+  if Addon.expansionLevel < Addon.expansions.wrath then
     
     self:RegisterEventCallback("SPELL_UPDATE_USABLE",   WipeAllOptions) -- when stepping indoors or outdoors
     self:RegisterEventCallback("SPELLS_CHANGED",        WipeAllOptions) -- used for mount spells

@@ -48,7 +48,7 @@ local function Mount(button)
   if Addon:HasValidMounts() and (Addon:GetOption("behavior", "alwaysDismount") and not Addon:IsRidingMount() or not Addon:GetOption("behavior", "alwaysDismount") and not Addon:IsRidingIdealMount()) then
     if GetUnitSpeed"player" ~= 0 then return end
     
-    if Addon.isClassic then
+    if Addon.expansionLevel < Addon.expansions.wrath then
       local spellID, itemID = Addon:SelectMount()
       button.id = spellID
       if itemID then

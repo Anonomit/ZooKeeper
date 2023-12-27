@@ -70,7 +70,7 @@ local function MakeGeneralOptions(opts)
     GUI:CreateDivider(opts)
     
     local collection = {}
-    if Addon.isClassic then
+    if Addon.expansionLevel < Addon.expansions.wrath then
       for spellID, itemID in pairs(self:GetOptionSafe("discovered", key)) do
         collection[#collection+1] = {favKey = spellID, spellID = spellID, itemID = type(itemID) == "number" and itemID or nil, icon = select(3, GetSpellInfo(spellID)), name = self.spellNames[spellID]}
       end
@@ -106,7 +106,7 @@ local function MakeGeneralOptions(opts)
         text = self:MakeIcon(data.icon) .. " " .. text
       end
       
-      if Addon.isClassic then
+      if Addon.expansionLevel < Addon.expansions.wrath then
         GUI:CreateExecute(opts, {"forget", data.spellID}, self.L["Remove"], nil, function() ForgetDiscovered(key, data.spellID) end)
       end
       
@@ -311,7 +311,7 @@ local function MakeClassOptions(opts, categoryName)
       
       local opts = GUI:CreateGroup(opts, classFilename, className)
       
-      if Addon.isClassic then
+      if Addon.expansionLevel < Addon.expansions.wrath then
         MakeClassOptionsSection(opts, className, classFilename, "mounts", {
           "Warhorse",
           "Charger",
@@ -339,7 +339,7 @@ local function MakeClassOptions(opts, categoryName)
     end
   end
   
-  if Addon.isClassic then
+  if Addon.expansionLevel < Addon.expansions.wrath then
     local classID = 9 -- Warlock
     
     classMenus[classID] = function()

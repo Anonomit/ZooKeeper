@@ -37,7 +37,7 @@ local function RefreshAllOptions()
   wipe(allOptions)
   
   local count = 0
-  if Addon.isClassic then
+  if Addon.expansionLevel < Addon.expansions.wrath then
     for bag = 0, NUM_BAG_SLOTS do
       for slot = 1, C_Container.GetContainerNumSlots(bag) do
         local containerInfo = C_Container.GetContainerItemInfo(bag, slot)
@@ -79,7 +79,7 @@ local function RefreshUsableOptions()
   wipe(usableOptions)
   
   local count = 0
-  if Addon.isClassic then
+  if Addon.expansionLevel < Addon.expansions.wrath then
     for k, v in pairs(allOptions) do
       local containerInfo = C_Container.GetContainerItemInfo(v.bag, v.slot)
       if containerInfo and not containerInfo.isLocked and Addon:CanAfford(v.spellID) then
@@ -222,7 +222,7 @@ function Addon:SelectCritter()
     end
   end
   self:DebugfIfOutput("finalSelectionMade", "Mount selected: %s (%s %d)", usableOptions[id].name, usableOptions[id].itemID and "item" or "id", id)
-  if self.isClassic then
+  if self.expansionLevel < self.expansions.wrath then
     self:SetOption(usableOptions[id].itemID or true, "discovered", "critters", id)
   end
   return id, usableOptions[id].itemID
@@ -233,7 +233,7 @@ end
 
 
 Addon:RegisterEnableCallback(function(self)
-  if self.isClassic then
+  if self.expansionLevel < self.expansions.wrath then
     self:RegisterOptionSetHandler(WipeIdealPets)
     
     self:RegisterEventCallback("ITEM_LOCK_CHANGED",  WipeUsableOptions) -- used for critters in bag

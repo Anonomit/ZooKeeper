@@ -28,7 +28,7 @@ local function Summon(button)
   
   local id
   
-  if Addon.isClassic then
+  if Addon.expansionLevel < Addon.expansions.wrath then
     if Addon:HasValidCritters() then
       local spellID, itemID = Addon:SelectCritter()
       button:SetAttribute("type", "item")

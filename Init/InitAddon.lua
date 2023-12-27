@@ -247,14 +247,14 @@ do
     },
   }
   
-  if Addon.isClassic then
+  if Addon.expansionLevel < Addon.expansions.wrath then
     Addon:Concatenate(Addon.spellsByCategory.PALADIN.mounts, {
-      Felsteed   = 5784,
-      Dreadsteed = 23161,
-    })
-    Addon:Concatenate(Addon.spellsByCategory.WARLOCK.mounts, {
       Warhorse = 13819,
       Charger  = 23214,
+    })
+    Addon:Concatenate(Addon.spellsByCategory.WARLOCK.mounts, {
+      Felsteed   = 5784,
+      Dreadsteed = 23161,
     })
   end
   
@@ -967,7 +967,7 @@ do
   
   
   -- collections log update has made mounts depend on riding skill. 410 speed mounts appear to be not affected
-  if not Addon.isClassic then
+  if Addon.expansionLevel >= Addon.expansions.wrath then
     for id, data in pairs(Addon.mounts) do
       local groundSpeeds, flightSpeeds, swimSpeeds = data[4], data[5], data[6]
       
