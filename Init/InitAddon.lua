@@ -438,51 +438,47 @@ do
   
   
   
-  local lastRangedItem
-  local function SetLastRangedItem(itemLink)
-    if itemLink then
-      lastRangedItem = strMatch(itemLink, "(item:.-)|h")
-    end
-  end
-  function Addon:GetLastRangedItem()
-    return lastRangedItem
-  end
+  -- local lastRangedItem
+  -- local function SetLastRangedItem(itemLink)
+  --   if itemLink then
+  --     lastRangedItem = strMatch(itemLink, "(item:.-)|h")
+  --   end
+  -- end
+  -- function Addon:GetLastRangedItem()
+  --   return lastRangedItem
+  -- end
   
-  Addon:RegisterEnableCallback(function(self)
-    SetLastRangedItem(GetInventoryItemLink("player", INVSLOT_RANGED))
-    self:RegisterEventCallback("PLAYER_EQUIPMENT_CHANGED", function(self, e, slot)
-      if slot == INVSLOT_RANGED then
-        SetLastRangedItem(GetInventoryItemLink("player", INVSLOT_RANGED))
-      end
-    end)
-  end)
+  -- Addon:RegisterEnableCallback(function(self)
+  --   SetLastRangedItem(GetInventoryItemLink("player", INVSLOT_RANGED))
+  --   self:RegisterEventCallback("PLAYER_EQUIPMENT_CHANGED", function(self, e, slot)
+  --     if slot == INVSLOT_RANGED then
+  --       SetLastRangedItem(GetInventoryItemLink("player", INVSLOT_RANGED))
+  --     end
+  --   end)
+  -- end)
   
-  function Addon:UnequipRangedItem()
-    if SpellIsTargeting() then return false end
+  -- function Addon:UnequipRangedItem()
+  --   if SpellIsTargeting() then return false end
     
-    if CursorHasItem() then
-      ClearCursor()
-    end
-    if IsInventoryItemLocked(INVSLOT_RANGED) then return false end
-    PickupInventoryItem(INVSLOT_RANGED)
+  --   if CursorHasItem() then
+  --     ClearCursor()
+  --   end
+  --   if IsInventoryItemLocked(INVSLOT_RANGED) then return false end
+  --   PickupInventoryItem(INVSLOT_RANGED)
     
-    if CursorHasItem() then
-      for bag = 0, NUM_BAG_SLOTS do
-        for slot = 1, C_Container.GetContainerNumSlots(bag) do
-          local containerInfo = C_Container.GetContainerItemInfo(bag, slot)
-          if not containerInfo then
-            if bag == BACKPACK_CONTAINER then
-              PutItemInBackpack()
-            else
-              PutItemInBag(slot + 19)
-            end
-            return true
-          end
-        end
-      end
-    end
-    return false
-  end
+  --   if CursorHasItem() then
+  --     for bag = 0, NUM_BAG_SLOTS do
+  --       for slot = 1, C_Container.GetContainerNumSlots(bag) do
+  --         local containerInfo = C_Container.GetContainerItemInfo(bag, slot)
+  --         if not containerInfo then
+  --           C_Container.PickupContainerItem(bag, slot)
+  --           return true
+  --         end
+  --       end
+  --     end
+  --   end
+  --   return false
+  -- end
 end
 
 

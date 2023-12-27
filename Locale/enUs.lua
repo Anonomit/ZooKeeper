@@ -57,8 +57,8 @@ L["Equip and activate legendary items."] = true
 
 L["Douse the Runes of Warding."] = true
 
-L["Toggle hunter ranged weapon"] = true
-L["Avoid hunter class calls by toggling ranged weapon off before it happens."] = true
+-- L["Toggle hunter ranged weapon"] = true
+-- L["Avoid hunter class calls by toggling ranged weapon off before it happens."] = true
 
 
 

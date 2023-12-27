@@ -508,12 +508,12 @@ local function MakeZoneOptions(opts, categoryName)
       end
     end
     
-    do
-      local zone = "Blackwing Lair"
-      local opts = GUI:CreateGroup(opts, zone, zone)
+    -- do
+    --   local zone = "Blackwing Lair"
+    --   local opts = GUI:CreateGroup(opts, zone, zone)
       
-      GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, L["Toggle hunter ranged weapon"], L["Avoid hunter class calls by toggling ranged weapon off before it happens."]).width = 1.5
-    end
+    --   GUI:CreateToggle(opts, {"zone", zone, "useZoneItems"}, L["Toggle hunter ranged weapon"], L["Avoid hunter class calls by toggling ranged weapon off before it happens."]).width = 1.5
+    -- end
   end
   
   return opts

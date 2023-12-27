@@ -287,15 +287,15 @@ local function AddZoneLines(macroText, travelLine)
         end
       end,
       
-      ["Blackwing Lair"] = function()
-        if Addon.MY_CLASS_FILENAME == "HUNTER" then
-          local lastRangedItem = Addon:GetLastRangedItem()
-          if lastRangedItem and GetItemCount(lastRangedItem) > 0 then
-            macroText:AddLine(Addon.Line("equip", lastRangedItem))
-            macroText:AddLine(Addon.Line("run", ADDON_NAME .. ":UnequipRangedItem()"))
-          end
-        end
-      end,
+      -- ["Blackwing Lair"] = function()
+      --   if Addon.MY_CLASS_FILENAME == "HUNTER" then
+      --     local lastRangedItem = Addon:GetLastRangedItem()
+      --     if lastRangedItem and GetItemCount(lastRangedItem) > 0 then
+      --       macroText:AddLine(Addon.Line("equip", lastRangedItem))
+      --       macroText:AddLine(Addon.Line("run", ADDON_NAME .. ":UnequipRangedItem()"))
+      --     end
+      --   end
+      -- end,
     }
     
     if Addon.expansionLevel >= Addon.expansions.tbc then
