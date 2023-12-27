@@ -86,6 +86,8 @@ end
 
 
 Addon:RegisterEnableCallback(function(self)
+  self:GetMacroButton(MACRO_BUTTON_NAME, true)
+  
   self:GetItemButton(SPELL_BUTTON_NAME):SetScript("PreClick",  Summon)
   
   self:GetMacroButton(MACRO_BUTTON_NAME):SetScript("PreClick", ModifyButton)

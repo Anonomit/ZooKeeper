@@ -405,6 +405,8 @@ end
 
 
 Addon:RegisterEnableCallback(function(self)
+  self:GetMacroButton(MACRO_BUTTON_NAME, true)
+  
   self:GetSpellButton(SPELL_BUTTON_NAME):SetScript("PreClick",  Mount)
   self:GetSpellButton(SPELL_BUTTON_NAME):SetScript("PostClick", PostMount)
   

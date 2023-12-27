@@ -239,17 +239,17 @@ end
 
 do
   Addon.expansions = {
-    retail  = 10,
-    wrath   = 3,
-    wotlk   = 3,
-    tbc     = 2,
-    bcc     = 2,
-    classic = 1,
+    retail    = 10,
+    cataclysm = 4,
+    cata      = 4,
+    wrath     = 3,
+    wotlk     = 3,
+    tbc       = 2,
+    bcc       = 2,
+    classic   = 1,
+    era       = 1,
   }
-  Addon.seasons = {
-    mastery   = 1,
-    discovery = 2,
-  }
+  
   Addon.season = ((C_Seasons or {}).GetActiveSeason or nop)() or 0
   Addon.expansionLevel = tonumber(GetBuildInfo():match"^(%d+)%.")
   if Addon.expansionLevel >= Addon.expansions.retail then
@@ -266,8 +266,8 @@ do
   Addon.isTBC     = Addon.expansionName == "tbc"
   Addon.isClassic = Addon.expansionName == "classic"
   
-  Addon.isSeasonOfMastery   = Addon.season == Addon.seasons.mastery
-  Addon.isSeasonOfDiscovery = Addon.season == Addon.seasons.discovery
+  Addon.isSeasonOfMastery   = Addon.season == Enum.SeasonID.SeasonOfMastery
+  Addon.isSeasonOfDiscovery = Addon.season == Enum.SeasonID.SeasonOfDiscovery or Enum.SeasonID.Placeholder
   
   Addon.isSoM = Addon.isSeasonOfMastery
   Addon.isSoD = Addon.isSeasonOfDiscovery
@@ -1131,8 +1131,8 @@ do
   end
   
   function Addon:Concatenate(t1, t2)
-    for _, v in ipairs(t2) do
-      t1[#t1+1] = v
+    for i = 1, #t2 do
+      t1[#t1+1] = t2[i]
     end
     for k, v in pairs(t2) do
       if type(k) ~= "number" then

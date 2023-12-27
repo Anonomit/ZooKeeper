@@ -5,9 +5,10 @@ local ADDON_NAME, Data = ...
 local Addon = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 ZooKeeper   = Addon
 
-
-
+local strLower = string.lower
+local strUpper = string.upper
 local strMatch = string.match
+local strSub   = string.sub
 
 
 
@@ -75,21 +76,48 @@ end
 --  ╚═════╝  ╚═════╝    ╚═╝      ╚═╝    ╚═════╝ ╚═╝  ╚═══╝╚══════╝
 
 do
-  local function GetButton(name, typeAttribute)
+  local function CreateRedirectButtons(buttonName)
+    local names = {""}
+    for n = 1, #buttonName do
+      Addon:Concatenate(names, names)
+      
+      local char = strSub(buttonName, n, n)
+      local upperChar = strUpper(char)
+      local lowerChar = strLower(char)
+      local half = #names / 2
+      for i = 1, #names do
+        names[i] = names[i] .. (i <= half and upperChar or lowerChar)
+      end
+    end
+    
+    local macroText = "/click " .. buttonName
+    for _, name in ipairs(names) do
+      if name ~= buttonName then
+        Addon:GetMacroButton(name):SetAttribute("macrotext", macroText)
+      end
+    end
+  end
+  
+  local function GetButton(name, typeAttribute, caseInsensitive)
     if not _G[name] then
       CreateFrame("Button", name, UIParent, "SecureActionButtonTemplate"):SetAttribute("type", typeAttribute)
     end
+    
+    if caseInsensitive then
+      CreateRedirectButtons(name)
+    end
+    
     return _G[name]
   end
   
-  function Addon:GetMacroButton(name)
-    return GetButton(name, "macro")
+  function Addon:GetMacroButton(name, caseInsensitive)
+    return GetButton(name, "macro", caseInsensitive)
   end
-  function Addon:GetSpellButton(name)
-    return GetButton(name, "spell")
+  function Addon:GetSpellButton(name, caseInsensitive)
+    return GetButton(name, "spell", caseInsensitive)
   end
-  function Addon:GetItemButton(name)
-    return GetButton(name, "item")
+  function Addon:GetItemButton(name, caseInsensitive)
+    return GetButton(name, "item", caseInsensitive)
   end
 end
 
