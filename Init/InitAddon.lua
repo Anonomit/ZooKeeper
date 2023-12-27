@@ -1153,7 +1153,7 @@ do
   
   function Addon:CanAfford(spellID)
     local reagent = self.companionReagents[spellID]
-    return not reagent or GetItemCount(reagent) > 0
+    return not reagent or Addon:GetOption("behavior", "useReagents") and GetItemCount(reagent) > 0 and true or false
   end
 end
 

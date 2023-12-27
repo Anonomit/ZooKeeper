@@ -68,6 +68,8 @@ L["No items found"]        = BROWSE_NO_RESULTS
 L["Favorites"]             = FAVORITES
 L["Remove"]                = REMOVE
 
+L["Reagents"] = MINIMAP_TRACKING_VENDOR_REAGENT
+
 L["Class"] = CLASS
 
 L["Zone"]                   = ZONE

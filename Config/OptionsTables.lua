@@ -160,6 +160,11 @@ local function MakeBehaviorOptions(opts, categoryName)
   GUI:CreateToggle(opts, {"behavior", "alwaysDismount"}, L["Always dismount"] , L["When already mounted and a better mount exists, dismount instead of using the better mount."])
   GUI:CreateNewline(opts)
   
+  if Addon.expansionLevel < Addon.expansions.wrath then
+    GUI:CreateToggle(opts, {"behavior", "useReagents"}, self.L["Reagents"] , L["Use pets that consume reagents."])
+    GUI:CreateNewline(opts)
+  end
+  
   do
     local disabled
     Addon:xpcall(function()

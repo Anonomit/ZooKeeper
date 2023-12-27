@@ -82,7 +82,7 @@ local function RefreshUsableOptions()
   if Addon.isClassic then
     for k, v in pairs(allOptions) do
       local containerInfo = C_Container.GetContainerItemInfo(v.bag, v.slot)
-      if containerInfo and not containerInfo.isLocked then
+      if containerInfo and not containerInfo.isLocked and Addon:CanAfford(v.spellID) then
         usableOptions[k] = v
         count = count + 1
       end

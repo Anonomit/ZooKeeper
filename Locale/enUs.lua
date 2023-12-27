@@ -25,6 +25,8 @@ L["Never use a mount/pet that isn't marked as a favorite.|n|nZooKeeper will not 
 L["Always dismount"] = true
 L["When already mounted and a better mount exists, dismount instead of using the better mount."] = true
 
+L["Use pets that consume reagents."] = true
+
 L["Hide some error messages"] = true
 L["Hides the red messages that can happen when you're unable to use an ability."] = true
 L["(Not compatible with ErrorFilter)"] = true

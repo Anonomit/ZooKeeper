@@ -23,6 +23,7 @@ function Addon:MakeDefaultOptions()
           useTrueRandomization = false, -- prevent mount cycling
           onlyUseFavs = false, -- ignore non-favorite mounts
           alwaysDismount = false, -- don't remount when a better version is found
+          useReagents = true, -- use pets that consume reagents
           hideErrorMessages = true, -- applies to red error text when using class spells
         },
         
