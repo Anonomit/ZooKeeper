@@ -316,7 +316,7 @@ do
   
   Addon.talents = {
     ImprovedGhostWolf = {2, 3},
-    FeralSwiftness    = Addon.isClassic and {2, 13} or {2, 12},
+    FeralSwiftness    = Addon.isEra and {2, 13} or {2, 12},
   }
   Addon.talentRanks = {
     ImprovedGhostWolf = 2,

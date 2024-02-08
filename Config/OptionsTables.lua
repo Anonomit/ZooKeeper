@@ -147,7 +147,7 @@ local function MakeBehaviorOptions(opts, categoryName)
   
   local opts = GUI:CreateGroup(opts, categoryName, categoryName)
   
-  if not Addon.isClassic then
+  if not Addon.isEra then
     GUI:CreateToggle(opts, {"behavior", "preferNonFlyingMountsOnGround"}, L["Prefer ground-only mounts"] , L["Try to avoid using flying mounts in non-flying areas."]).width = 1.5
     GUI:CreateNewline(opts)
   end
@@ -271,10 +271,10 @@ local function MakeClassOptions(opts, categoryName)
         "CatForm",
         "AquaticForm",
         "TravelForm",
-        not Addon.isClassic and "FlightForm" or nil,
+        not Addon.isEra and "FlightForm" or nil,
       })
       
-      if not Addon.isClassic then
+      if not Addon.isEra then
         GUI:CreateDivider(opts)
         do
           local opts = GUI:CreateGroupBox(opts, self.L["Preferences"])
@@ -488,7 +488,7 @@ local function MakeZoneOptions(opts, categoryName)
   
   do
     local opts = opts
-    if not Addon.isClassic then
+    if not Addon.isEra then
       opts = GUI:CreateGroup(opts, "Classic", self.L["Classic"])
     end
     

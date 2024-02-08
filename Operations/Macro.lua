@@ -36,7 +36,7 @@ local conditionalMeta = {
   },
   __tostring = function(self)
     return "[" .. tblConcat(self.conditions, ",") .. "]"
-  end
+  end,
 }
 
 function Addon.Conditional(...)
@@ -63,7 +63,7 @@ local conditionalsMeta = {
       str = str .. tostring(v)
     end
     return str
-  end
+  end,
 }
 
 function Addon.Conditionals(...)
@@ -87,7 +87,7 @@ local LineMeta = {
     end,
     IsComplete = function(self)
       return self.command and #self.actions > 0 and true or false
-    end
+    end,
   },
   __tostring = function(self)
     if self:IsComplete() then
@@ -100,7 +100,7 @@ local LineMeta = {
       end
       return line
     end
-  end
+  end,
 }
 
 function Addon.Line(command, ...)
@@ -147,7 +147,7 @@ local MacroMeta = {
       self.needsUpdate = false
     end
     return self.text
-  end
+  end,
 }
 
 function Addon.MacroText()
