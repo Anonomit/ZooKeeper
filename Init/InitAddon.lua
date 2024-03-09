@@ -316,7 +316,10 @@ do
   
   Addon.talents = {
     ImprovedGhostWolf = {2, 3},
-    FeralSwiftness    = Addon.isEra and {2, 13} or {2, 12},
+    FeralSwiftness = Addon:Switch(Addon.expansionLevel, {
+      [Addon.expansions.era]   = function() return {2, 13} end,
+      [Addon.expansions.wrath] = function() return {2, 12} end,
+    }, function() return {2, 99} end)
   }
   Addon.talentRanks = {
     ImprovedGhostWolf = 2,

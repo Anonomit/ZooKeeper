@@ -188,7 +188,7 @@ local function MakeTravelLine()
         if Addon:CanUseForm"CatForm" and ({GetTalentInfo(unpack(Addon.talents.FeralSwiftness))})[5] >= Addon.talentRanks.FeralSwiftness then -- Cat form has a speed boost
           local conditionals = Addon.Conditionals()
           local conditional  = baseConditional:Copy()
-          if Addon.expansionLevel < Addon.expansions.wrath then
+          if Addon.expansionLevel == Addon.expansions.tbc then
             conditional:Add"outdoors"
           end
           
