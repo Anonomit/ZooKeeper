@@ -22,6 +22,9 @@ local tblSort   = table.sort
 
 
 
+local function CanToggleJournal()
+  return ToggleCollectionsJournal
+end
 local function ToggleJournal(tab)
   ToggleCollectionsJournal(tab)
 end
@@ -56,12 +59,14 @@ local function MakeGeneralOptions(opts)
     GUI:CreateDescription(opts, icon .. " " .. self.L["Favorites"] .. " " .. icon)
   end
   
-  GUI:CreateExecute(opts, {"mounts"}, self.L["Toggle Mounts Journal"], nil, ToggleMountsJournal)
-  GUI:CreateExecute(opts, {"pets"},   self.L["Toggle Pet Journal"],    nil, ToggleCrittersJournal)
+  if CanToggleJournal() then
+    GUI:CreateExecute(opts, {"mounts"}, self.L["Toggle Mounts Journal"], nil, ToggleMountsJournal)
+    GUI:CreateExecute(opts, {"pets"},   self.L["Toggle Pet Journal"],    nil, ToggleCrittersJournal)
+  end
   
   for k, v in ipairs{
-    {"mounts",   self.L["Mounts"], self.L["Toggle Mounts Journal"], ToggleMountsJournal},
-    {"critters", self.L["Pets"],   self.L["Toggle Pet Journal"],    ToggleCrittersJournal},
+    {"mounts",   self.L["Mounts"]},
+    {"critters", self.L["Pets"]},
   } do
     local key, title, journalText, func = unpack(v)
     
