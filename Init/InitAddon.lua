@@ -14,6 +14,18 @@ local strSub   = string.sub
 
 
 
+--  ██████╗ ██╗███╗   ██╗██████╗ ██╗███╗   ██╗ ██████╗ ███████╗
+--  ██╔══██╗██║████╗  ██║██╔══██╗██║████╗  ██║██╔════╝ ██╔════╝
+--  ██████╔╝██║██╔██╗ ██║██║  ██║██║██╔██╗ ██║██║  ███╗███████╗
+--  ██╔══██╗██║██║╚██╗██║██║  ██║██║██║╚██╗██║██║   ██║╚════██║
+--  ██████╔╝██║██║ ╚████║██████╔╝██║██║ ╚████║╚██████╔╝███████║
+--  ╚═════╝ ╚═╝╚═╝  ╚═══╝╚═════╝ ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝
+
+Addon:RegisterInitializeCallback(function()
+  _G["BINDING_HEADER_ZOOKEEPER"]          = ADDON_NAME
+  _G["BINDING_NAME_CLICK ZKM:LeftButton"] = Addon.L["Mount"]
+  _G["BINDING_NAME_CLICK ZKP:LeftButton"] = Addon.L["Call Pet"]
+end)
 
 
 
@@ -100,7 +112,9 @@ do
   
   local function GetButton(name, typeAttribute, caseInsensitive)
     if not _G[name] then
-      CreateFrame("Button", name, UIParent, "SecureActionButtonTemplate"):SetAttribute("type", typeAttribute)
+      local btn = CreateFrame("Button", name, UIParent, "SecureActionButtonTemplate")
+      btn:SetAttribute("type", typeAttribute)
+      btn:RegisterForClicks"LeftButtonDown"
     end
     
     if caseInsensitive then

@@ -1,0 +1,4 @@
+<Bindings>
+  <Binding name="CLICK ZKM:LeftButton" Category="BINDING_HEADER_ZOOKEEPER" />
+  <Binding name="CLICK ZKP:LeftButton" Category="BINDING_HEADER_ZOOKEEPER" />
+</Bindings>

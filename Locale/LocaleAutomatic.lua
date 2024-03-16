@@ -16,37 +16,69 @@ local tostring = tostring
 local L = setmetatable({}, {
   __index = function(self, key)
     rawset(self, key, key)
-    if Addon:IsDebugEnabled() then
-      geterrorhandler()(ADDON_NAME..": Missing automatic translation for '"..tostring(key).."'")
-    end
+    Addon:Throwf("%s: Missing automatic translation for '%s'", ADDON_NAME, tostring(key))
     return key
-  end
+  end,
+  __newindex = function(self, key, val)
+    if type(val) == "table" then
+      -- get the largest index in table
+      local max = 1
+      for i in pairs(val) do
+        if i > max then
+          max = i
+        end
+      end
+      -- try adding values from the table in order
+      for i = 1, max do
+        if val[i] then
+          self[key] = val[i]
+          if rawget(self, key) then
+            return
+          else
+            Addon:Warnf(ADDON_NAME..": Automatic translation #%d failed for '%s'", i, tostring(key))
+          end
+        else
+          Addon:Warnf(ADDON_NAME..": Automatic translation #%d failed for '%s'", i, tostring(key))
+        end
+      end
+    elseif type(val) == "function" then
+      -- use the function return value unless it errors
+      local success, val = Addon:xpcall(val)
+      if not success then
+        Addon:Throwf("%s: Automatic translation error for '%s'", ADDON_NAME, tostring(key))
+        return
+      end
+      rawset(self, key, val)
+    else
+      rawset(self, key, val)
+    end
+  end,
 })
 Addon.L = L
 
 
-L["Options"] = OPTIONS
+-- L["Options"] = OPTIONS
 
-L["Enable"]  = ENABLE
-L["Disable"] = DISABLE
-L["Enabled"] = VIDEO_OPTIONS_ENABLED
+-- L["Disable"] = DISABLE
+-- L["Enabled"] = VIDEO_OPTIONS_ENABLED
 -- L["Disabled"] = ADDON_DISABLED
-L["Modifiers:"] = MODIFIERS_COLON
+-- L["Modifiers:"] = MODIFIERS_COLON
 
-L["never"] = strLower(CALENDAR_REPEAT_NEVER)
-L["any"]   = strLower(SPELL_TARGET_TYPE1_DESC)
-L["all"]   = strLower(SPELL_TARGET_TYPE12_DESC)
+-- L["never"] = function() strLower(CALENDAR_REPEAT_NEVER) end
+-- L["any"]   = function() strLower(SPELL_TARGET_TYPE1_DESC) end
+-- L["all"]   = function() strLower(SPELL_TARGET_TYPE12_DESC) end
 
-L["SHIFT key"] = SHIFT_KEY
-L["CTRL key"]  = CTRL_KEY
-L["ALT key"]   = ALT_KEY
+-- L["SHIFT key"] = SHIFT_KEY
+-- L["CTRL key"]  = CTRL_KEY
+-- L["ALT key"]   = ALT_KEY
 
-L["Features"] = FEATURES_LABEL
-
-
-L["ERROR"] = ERROR_CAPS
+-- L["Features"] = FEATURES_LABEL
 
 
+-- L["ERROR"] = ERROR_CAPS
+
+
+L["Enable"]                       = ENABLE
 L["Debug"]                        = BINDING_HEADER_DEBUG
 L["Display Lua Errors"]           = SHOW_LUA_ERRORS
 L["Reload UI"]                    = RELOADUI
@@ -58,6 +90,8 @@ L["Clear Cache"]                  = BROWSER_CLEAR_CACHE
 
 
 
+L["Mount"]    = MOUNT
+L["Call Pet"] = {function() return format(CALL_PET_SPELL_NAME, PET) end, CLASS_HUNTER_SPELLNAME2}
 
 L["Toggle Mounts Journal"] = BINDING_NAME_TOGGLEMOUNTJOURNAL
 L["Toggle Pet Journal"]    = BINDING_NAME_TOGGLEPETJOURNAL
