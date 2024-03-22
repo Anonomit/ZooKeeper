@@ -46,7 +46,7 @@ local function Mount(button)
     QueueDismount()
   end
   if Addon:HasValidMounts() and (Addon:GetOption("behavior", "alwaysDismount") and not Addon:IsRidingMount() or not Addon:GetOption("behavior", "alwaysDismount") and not Addon:IsRidingIdealMount()) then
-    if GetUnitSpeed"player" ~= 0 then return end
+    if GetUnitSpeed"player" ~= 0 or IsFalling() then return end
     
     if Addon.expansionLevel < Addon.expansions.wrath then
       local spellID, itemID = Addon:SelectMount()
