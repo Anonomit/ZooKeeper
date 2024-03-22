@@ -171,9 +171,9 @@ do
     return strMatch(texture, "|T([^:]+):")
   end
   
-  function Addon:InsertItemIcon(item)
+  function Addon:InsertItemIcon(item, size)
     local icon = select(5, GetItemInfoInstant(self.items[item]))
-    return (icon and (self:MakeIcon(icon) .. " ") or "") .. self.itemNames[item]
+    return (icon and (self:MakeIcon(icon, size, size) .. " ") or "") .. self.itemNames[item]
   end
   function Addon:InsertSpellIcon(spell)
     local icon = select(3, GetSpellInfo(self.spells[spell]))
@@ -359,6 +359,11 @@ do
       EternalQuintessence = 22754,
       AqualQuintessence   = 17333,
     },
+    
+    ["Misc"] = {
+      HookOfTheMasterAngler = 19979,
+      SilverHook = 5567, -- Use this item's icon instead of HookOfTheMasterAngler to avoid weird offset behavior
+    }
   }
   
   if Addon.expansionLevel >= Addon.expansions.tbc then

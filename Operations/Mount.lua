@@ -109,10 +109,16 @@ local function MakeTravelLine()
   
   local baseConditional = Addon.Conditional("novehicleui", "nomounted")
   
+  if Addon:GetOption("item", "HookOfTheMasterAngler", "use") and IsEquippedItem(Addon.items.HookOfTheMasterAngler) then
+    local conditionals = Addon.Conditionals(baseConditional:Copy():Add("swimming"))
+    travelLine:Add(conditionals, "item:" .. Addon.items.HookOfTheMasterAngler)
+  end
+  
   if Addon:GetOption("class", Addon.MY_CLASS_FILENAME, "useForms") then
     Addon:Switch(Addon.MY_CLASS_FILENAME, {
       DRUID = function()
         if Addon:CanUseForm"AquaticForm" then
+          travelLine:Wipe()
           local conditionals = Addon.Conditionals(baseConditional:Copy():Add("swimming"))
           travelLine:Add(conditionals, Addon.spellNames.AquaticForm)
         end
@@ -204,6 +210,7 @@ local function MakeTravelLine()
       
       SHAMAN = function()
         if Addon:CanUseForm"WaterWalking" then
+          travelLine:Wipe()
           local conditionals = Addon.Conditionals(baseConditional:Copy():Add("swimming", "@player"))
           travelLine:Add(conditionals, Addon.spellNames.WaterWalking)
         end

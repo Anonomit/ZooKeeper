@@ -136,6 +136,10 @@ local MacroMeta = {
       return #tostring(self)
     end,
     
+    GetLineCount = function(self)
+      return #self.lines
+    end,
+    
     Apply = function(self, parent)
       Addon:BindMacro(parent, self)
       return self

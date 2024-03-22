@@ -58,6 +58,13 @@ function Addon:MakeDefaultOptions()
             atCursor = true,
           },
         },
+        
+        item = {
+          ["**"] = {
+            equip = false,
+            use   = true,
+          }
+        }
       },
 
 

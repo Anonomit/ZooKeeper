@@ -529,6 +529,35 @@ end
 
 
 
+
+
+
+
+--  ██╗████████╗███████╗███╗   ███╗     ██████╗ ██████╗ ████████╗██╗ ██████╗ ███╗   ██╗███████╗
+--  ██║╚══██╔══╝██╔════╝████╗ ████║    ██╔═══██╗██╔══██╗╚══██╔══╝██║██╔═══██╗████╗  ██║██╔════╝
+--  ██║   ██║   █████╗  ██╔████╔██║    ██║   ██║██████╔╝   ██║   ██║██║   ██║██╔██╗ ██║███████╗
+--  ██║   ██║   ██╔══╝  ██║╚██╔╝██║    ██║   ██║██╔═══╝    ██║   ██║██║   ██║██║╚██╗██║╚════██║
+--  ██║   ██║   ███████╗██║ ╚═╝ ██║    ╚██████╔╝██║        ██║   ██║╚██████╔╝██║ ╚████║███████║
+--  ╚═╝   ╚═╝   ╚══════╝╚═╝     ╚═╝     ╚═════╝ ╚═╝        ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝
+
+local function MakeItemOptions(opts, categoryName)
+  local self = Addon
+  local GUI = self.GUI
+  
+  local opts = GUI:CreateGroup(opts, categoryName, categoryName)
+  
+  
+  GUI:CreateToggle(opts, {"item", "HookOfTheMasterAngler", "use"}, Addon:InsertItemIcon("SilverHook", 16)).tooltipHyperlink = "item:" .. Addon.items.HookOfTheMasterAngler
+  GUI:CreateNewline(opts)
+  
+  
+  return opts
+end
+
+
+
+
+
 --  ██████╗ ███████╗██████╗ ██╗   ██╗ ██████╗      ██████╗ ██████╗ ████████╗██╗ ██████╗ ███╗   ██╗███████╗
 --  ██╔══██╗██╔════╝██╔══██╗██║   ██║██╔════╝     ██╔═══██╗██╔══██╗╚══██╔══╝██║██╔═══██╗████╗  ██║██╔════╝
 --  ██║  ██║█████╗  ██████╔╝██║   ██║██║  ███╗    ██║   ██║██████╔╝   ██║   ██║██║   ██║██╔██╗ ██║███████╗
@@ -673,7 +702,8 @@ function Addon:MakeAddonOptions(chatCmd)
     {MakeGeneralOptions,  nil},
     {MakeBehaviorOptions, self.L["Preferences"], "preferences", "behaviors", "behaviours"},
     {MakeClassOptions,    self.L["Class"],       "classes"},
-    {MakeZoneOptions ,    self.L["Zone"],        "zones"},
+    {MakeZoneOptions,     self.L["Zone"],        "zones"},
+    {MakeItemOptions,     self.L["Item"],        "items"},
     {MakeProfileOptions,  "Profiles",            "profiles"},
     {MakeDebugOptions,    self.L["Debug"],       "debug", "db"},
   } do

@@ -111,6 +111,8 @@ L["Classic"]                = EXPANSION_NAME0
 L["The Burning Crusade"]    = EXPANSION_NAME1
 L["Wrath of the Lich King"] = EXPANSION_NAME2
 
+L["Item"] = ENCOUNTER_JOURNAL_ITEM
+
 L["Use Item"] = USE_ITEM
 
 L["Legendaries"] = LOOT_JOURNAL_LEGENDARIES
