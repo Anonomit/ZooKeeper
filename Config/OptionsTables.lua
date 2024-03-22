@@ -304,6 +304,7 @@ local function MakeClassOptions(opts, categoryName)
       
       MakeClassOptionsSection(opts, className, classFilename, "forms", {
         "GhostWolf",
+        "WaterWalking",
       })
     end
   end

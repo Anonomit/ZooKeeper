@@ -203,6 +203,11 @@ local function MakeTravelLine()
       end,
       
       SHAMAN = function()
+        if Addon:CanUseForm"WaterWalking" then
+          local conditionals = Addon.Conditionals(baseConditional:Copy():Add("swimming", "@player"))
+          travelLine:Add(conditionals, Addon.spellNames.WaterWalking)
+        end
+        
         if Addon:CanUseForm"GhostWolf" then
           local conditionals = Addon.Conditionals()
           local conditional  = baseConditional:Copy():Add("outdoors")

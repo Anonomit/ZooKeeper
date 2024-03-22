@@ -42,6 +42,11 @@ function Addon:MakeDefaultOptions()
             allowRiskyShapeshifting = false, -- determines if a druid can exit flight form in an area where it cannot be recast
             alwaysPreferFlightForm  = false,
           },
+          SHAMAN = {
+            allowedForms = {
+              WaterWalking = false,
+            },
+          },
         },
         
         zone = {

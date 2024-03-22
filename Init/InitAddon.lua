@@ -244,7 +244,8 @@ do
     },
     SHAMAN = {
       mounts = {
-        GhostWolf = 2645,
+        GhostWolf    = 2645,
+        WaterWalking = 546,
       },
     },
     PALADIN = {
